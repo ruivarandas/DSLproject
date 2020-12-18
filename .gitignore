@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.mit-bih-arrhythmia-database-1.0.0
+mit-bih-arrhythmia-database-1.0.0/
