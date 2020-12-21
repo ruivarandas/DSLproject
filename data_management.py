@@ -3,9 +3,10 @@ import shutil
 from sklearn.model_selection import train_test_split
 import attr
 import torch
-from torchvision import datasets, models, transforms
-import torchvision
+from torchvision import datasets, transforms
+import matplotlib.pyplot as plt
 import numpy as np
+
 
 @attr.s(auto_attribs=True)
 class DirManagement:
@@ -56,6 +57,7 @@ class DirManagement:
     
     def write_data(self, train_filenames, val_filenames, test_filenames):
         """
+        TO BE CHANGED BY RUI
         copy the images from raw dir to the new directory
         """
         self._create_new_dirs()
@@ -97,7 +99,6 @@ class DataPreparation:
             ])
         }
         return data_transforms
-    
     
     def create_dataloaders(self, batch_size, shuffle, num_workers):
         data_transforms = self.data_transformations()
