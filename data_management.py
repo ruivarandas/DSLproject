@@ -69,7 +69,7 @@ class DirManagement:
     
 @attr.s(auto_attribs=True)
 class DataPreparation:
-    dirs: DirManagement
+    dirs: DirManagement    
     device: str = attr.ib(default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), init=False)  
         
     @staticmethod
@@ -78,7 +78,7 @@ class DataPreparation:
             'train': transforms.Compose([
         #         transforms.RandomResizedCrop(224),
         #         transforms.RandomHorizontalFlip(),
-                transforms.Resize(224),
+                transforms.Resize((224,224)),
         #         transforms.CenterCrop((800, 200)),
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -99,13 +99,15 @@ class DataPreparation:
         return data_transforms
     
     
-    def create_dataloaders(self):
+    def create_dataloaders(self, batch_size, shuffle, num_workers):
         data_transforms = self.data_transformations()
         image_datasets = {x: datasets.ImageFolder(self.dirs.data_dir / x, data_transforms[x]) for x in ['train', 'val', 'test']}
-        dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=1, shuffle=True, num_workers=4) for x in ['train', 'val', 'test']}
+        dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers) for x in ['train', 'val', 'test']}
         dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
-        return dataloaders, dataset_sizes
+        class_names = image_datasets['train'].classes
+        return dataloaders, dataset_sizes, class_names
     
+    @staticmethod
     def imshow(inp, title=None):
         """Imshow for Tensor."""
         inp = inp.numpy().transpose((1, 2, 0))
