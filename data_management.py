@@ -73,7 +73,8 @@ class DirManagement:
 class DataPreparation:
     dirs: DirManagement    
     device: str = attr.ib(default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), init=False)  
-        
+
+
     @staticmethod
     def data_transformations():
         data_transforms = {
