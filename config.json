@@ -1,1 +1,20 @@
-{"data_dir": "/home/bbg/Documents/DSL/DSLproject/data", "labels": {"abnormal": [], "normal": "N"}, "test_fraction": 0.1, "val_fraction": 0.05, "model_name": "resnet50", "number_workers": 4, "shuffle_data": true, "batch_size": 4, "epochs": 1, "initial_learning_rate": 0.001, "optimizer_momentum": 0.9, "decay_step": 7, "lr_scheduler_gamma": 0.1, "last_trained_model": "/home/bbg/Documents/DSL/DSLproject/models/resnet50_d_22_t_11:05.pth"}
+{
+  "data_dir": "/home/bbg/Documents/DSL/DSLproject/data",
+  "dirs_already_prepared": true,
+  "labels": {
+    "abnormal": [],
+    "normal": "N"
+  },
+  "test_fraction": 0.1,
+  "val_fraction": 0.05,
+  "model_name": "resnet50",
+  "number_workers": 4,
+  "shuffle_data": true,
+  "batch_size": 4,
+  "epochs": 1,
+  "initial_learning_rate": 0.001,
+  "optimizer_momentum": 0.9,
+  "decay_step": 7,
+  "lr_scheduler_gamma": 0.1,
+  "last_trained_model": "/home/bbg/Documents/DSL/DSLproject/models/resnet50_d_22_t_11:05.pth"
+}

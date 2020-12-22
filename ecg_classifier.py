@@ -30,10 +30,14 @@ class ECGClassifier:
         return data
 
     def _prepare_data(self):
-        dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels"])
-        train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"], self.configurations["val_fraction"])
-        dir_prep.write_data(train, val, test)
-        data_prep = DataPreparation(dir_prep)
+        if not self.configurations["dirs_already_prepared"]:
+            dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels"])
+            train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"], self.configurations["val_fraction"])
+            dir_prep.write_data(train, val, test)
+            data_prep = DataPreparation(dir_prep.data_dir)
+        else:
+            data_prep = DataPreparation(Path(self.configurations["data_dir"]) / "figures")
+
         self.device = data_prep.device
         self.dataloaders, self.datasets_sizes, self.class_names = data_prep.create_dataloaders(self.configurations["batch_size"],
                                                                                                self.configurations["shuffle_data"],

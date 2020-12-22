@@ -71,9 +71,8 @@ class DirManagement:
     
 @attr.s(auto_attribs=True)
 class DataPreparation:
-    dirs: DirManagement    
+    data_dir: Path
     device: str = attr.ib(default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), init=False)  
-
 
     @staticmethod
     def data_transformations():
@@ -103,7 +102,7 @@ class DataPreparation:
     
     def create_dataloaders(self, batch_size, shuffle, num_workers):
         data_transforms = self.data_transformations()
-        image_datasets = {x: datasets.ImageFolder(self.dirs.data_dir / x, data_transforms[x]) for x in ['train', 'val', 'test']}
+        image_datasets = {x: datasets.ImageFolder((self.data_dir / x).as_posix(), data_transforms[x]) for x in ['train', 'val', 'test']}
         dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers) for x in ['train', 'val', 'test']}
         dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
         class_names = image_datasets['train'].classes

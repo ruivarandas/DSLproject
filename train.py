@@ -1,6 +1,7 @@
 import torch
 import time
 import copy
+from sklearn import metrics
 
 
 def train_and_eval(model, criterion, optimizer, scheduler,device, dataloaders, dataset_sizes, num_epochs):
@@ -9,7 +10,7 @@ def train_and_eval(model, criterion, optimizer, scheduler,device, dataloaders, d
     best_acc = 0.0
 
     for epoch in range(num_epochs):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+        print(f'Epoch {epoch}/{ num_epochs - 1}')
         print('-' * 10)
 
         # Each epoch has a training and validation phase
@@ -44,15 +45,17 @@ def train_and_eval(model, criterion, optimizer, scheduler,device, dataloaders, d
 
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
+                # print(preds, labels.data)
                 running_corrects += torch.sum(preds == labels.data)
             if phase == 'train':
                 scheduler.step()
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
-
-            print('{} Loss: {:.4f} Acc: {:.4f}'.format(
-                phase, epoch_loss, epoch_acc))
+            # epoch_acc_sk = metrics.accuracy_score(labels.data, preds)
+            print(torch.cat(preds).numpy())
+            print(labels.data)
+            print(f'{phase} Loss: {round(epoch_loss,4)} Acc: {round(epoch_acc,4)}')
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
@@ -62,9 +65,8 @@ def train_and_eval(model, criterion, optimizer, scheduler,device, dataloaders, d
         print()
 
     time_elapsed = time.time() - since
-    print('Training complete in {:.0f}m {:.0f}s'.format(
-        time_elapsed // 60, time_elapsed % 60))
-    print('Best val Acc: {:4f}'.format(best_acc))
+    print(f'Training complete in {round(time_elapsed // 60,0)}m {round(time_elapsed % 60, 0)}s')
+    print(f'Best val Acc: {round(best_acc,4)}')
 
     # load best model weights
     model.load_state_dict(best_model_wts)
