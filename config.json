@@ -2,8 +2,8 @@
   "data_dir": "/home/bbg/Documents/DSL/DSLproject/data",
   "dirs_already_prepared": true,
   "labels": {
-    "abnormal": [],
-    "normal": "N"
+    "abnormal": ["A", "a", "J", "S", "V", "E", "F", "P", "/", "f", "Q"],
+    "normal": ["N", "L", "R", "e", "j"]
   },
   "test_fraction": 0.1,
   "val_fraction": 0.05,
