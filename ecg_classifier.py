@@ -9,7 +9,7 @@ import torchvision
 from torchvision import models
 import json
 import torch
-import time
+from datetime import datetime
 
 
 @attr.s(auto_attribs=True)
@@ -30,7 +30,7 @@ class ECGClassifier:
         return data
 
     def _prepare_data(self):
-        dir_prep = DirManagement(Path(self.configurations["proj_dir"]), self.configurations["labels"])
+        dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels"])
         train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"], self.configurations["val_fraction"])
         dir_prep.write_data(train, val, test)
         data_prep = DataPreparation(dir_prep)
@@ -66,8 +66,9 @@ class ECGClassifier:
                                                     gamma=self.configurations["lr_scheduler_gamma"])
 
     def _save_model(self, model):
+        now = datetime.now()
         path = Path.cwd() / "models"
-        name = f"{self.configurations['model_name']}_{time.time()}"
+        name = f"{self.configurations['model_name']}_{now.strftime('d_%d_t_%H:%M')}"
         trained_model_filepath = path / f"{name}.pth"
         model_config_filepath = path / f"{name}.json"
         torch.save(model.state_dict(), trained_model_filepath.as_posix())
@@ -85,6 +86,7 @@ class ECGClassifier:
 
     def train_and_eval(self):
         self._prepare_data()
+        print("Folders created and data prepared")
         self._define_model()
         self._define_learning()
         loss = self._loss()

@@ -2,6 +2,7 @@ import torch
 import time
 import copy
 
+
 def train_and_eval(model, criterion, optimizer, scheduler,device, dataloaders, dataset_sizes, num_epochs):
     since = time.time()
     best_model_wts = copy.deepcopy(model.state_dict())
