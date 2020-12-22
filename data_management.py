@@ -65,12 +65,12 @@ class DirManagement:
     
     def write_data(self, train_filenames, val_filenames, test_filenames):
         """
-        TO BE CHANGED BY RUI
+
         copy the images from raw dir to the new directory
         """
         self._create_new_dirs()
         all_labels = self.all_labels
-        for dataset in [("train", train_filenames), ("val", val_filenames),("test", test_filenames)]:
+        for dataset in [("train", train_filenames), ("val", val_filenames), ("test", test_filenames)]:
             print(dataset[0])
             for i, filename in enumerate(dataset[1]):
                 print(f"{i+1}/{len(dataset[1])}", end='\r')

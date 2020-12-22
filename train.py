@@ -2,7 +2,7 @@ import torch
 import time
 import copy
 import numpy as np
-from sklearn import metrics
+from sklearn import metrics as sk_metrics
 
 
 def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs):
@@ -10,6 +10,11 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
     best_f1score = 0.0
+
+    losses = []
+    accs = []
+    f1_scores = []
+
     for epoch in range(num_epochs):
         print(f'Epoch {epoch}/{ num_epochs - 1}')
         print('-' * 10)
@@ -52,12 +57,19 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
 
                 running_loss += loss.item() * inputs.size(0)
 
-            if phase == 'train':
-                scheduler.step()
+
+
             epoch_loss = running_loss / dataset_sizes[phase]
-            epoch_acc = metrics.accuracy_score(y_pred, y_true)
-            f1_score = metrics.f1_score(y_pred, y_true)
+            epoch_acc = sk_metrics.accuracy_score(y_pred, y_true)
+            f1_score = sk_metrics.f1_score(y_pred, y_true)
             print(f'{phase} Loss: {round(epoch_loss,4)} Acc: {round(epoch_acc,4)} F1Score: {round(f1_score, 4)}')
+
+            if phase == 'train':
+                losses.append(epoch_loss)
+                f1_scores.append(f1_score)
+                accs.append(epoch_acc)
+                scheduler.step()
+
 
             # deep copy the model
             # CHECK BELLOW
@@ -74,4 +86,9 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
 
     # load best model weights
     model.load_state_dict(best_model_wts)
-    return model
+    metrics = {
+        "loss": losses,
+        "f1_score": f1_scores,
+        "acc": accs,
+    }
+    return model, metrics

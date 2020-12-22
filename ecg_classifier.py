@@ -10,6 +10,7 @@ from torchvision import models
 import json
 import torch
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 
 @attr.s(auto_attribs=True)
@@ -63,9 +64,9 @@ class ECGClassifier:
         Add differential learning rate
         :return:
         """
-        for name in self.model.parameters():
-            print(name)
-            # print(param)
+        # for name in self.model.parameters():
+        #     print(name)
+        #     # print(param)
         self.optimizer = optim.SGD(self.model.parameters(), lr=self.configurations["initial_learning_rate"],
                                    momentum=self.configurations["optimizer_momentum"])
         # print(self.model.parameters())
@@ -73,7 +74,7 @@ class ECGClassifier:
         self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=self.configurations["decay_step"],
                                                     gamma=self.configurations["lr_scheduler_gamma"])
 
-    def _save_model(self, model):
+    def _save_model(self, model, metrics):
         now = datetime.now()
         path = Path.cwd() / "models"
         name = f"{self.configurations['model_name']}_{now.strftime('d_%d_t_%H:%M')}"
@@ -88,7 +89,7 @@ class ECGClassifier:
 
         with open(self.config_path, 'w') as outfile:
             json.dump(data, outfile)
-
+        data["metrics"] = metrics
         with open(model_config_filepath, 'w') as new_file:
             json.dump(data, new_file)
 
@@ -97,10 +98,19 @@ class ECGClassifier:
         print("Folders created and data prepared")
         self._define_model()
         self._define_learning()
-        # loss = self._loss()
-        # model = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device, self.dataloaders,
-        #                        self.datasets_sizes, self.configurations["epochs"])
-        # self._save_model(model)
+        loss = self._loss()
+        model, metrics = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device, self.dataloaders,
+                               self.datasets_sizes, self.configurations["epochs"])
+        self._save_model(model, metrics)
+        for metric in metrics:
+            self.plot(metrics[metric], metric, f"{metric}_per_epoch")
+
+    def plot(self, plottable, ylabel='', name=''):
+        plt.clf()
+        plt.xlabel('Epoch')
+        plt.ylabel(ylabel)
+        plt.plot(list(range(self.configurations["epochs"])), plottable)
+        plt.savefig(f'plots/{name}.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':
