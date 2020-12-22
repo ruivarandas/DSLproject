@@ -32,6 +32,14 @@ class DirManagement:
             for image in folder.glob("*.png"):
                 all_filenames.append(image)
         return all_filenames
+
+    @property
+    def all_labels(self):
+        all_labels = {}
+        for folder in self.raw_data_dir.iterdir():
+            for txt in folder.glob("*.txt"):
+                all_labels[folder.name] = np.loadtxt(Path(folder) / txt.name, dtype=np.object)[1:, 1]
+        return all_labels
                 
     def create_datasets(self, test_size, val_size):
         """
@@ -61,11 +69,16 @@ class DirManagement:
         copy the images from raw dir to the new directory
         """
         self._create_new_dirs()
+        all_labels = self.all_labels
         for dataset in [("train", train_filenames), ("val", val_filenames),("test", test_filenames)]:
-            for filename in dataset[1]:
-                if filename.stem.split("_")[-1] == self.labels_dict["normal"]:
+            print(dataset[0])
+            for i, filename in enumerate(dataset[1]):
+                print(f"{i+1}/{len(dataset[1])}", end='\r')
+                signal, segment = str(filename).split('\\')[2:]
+                segment = segment.split('_')[0]
+                if all_labels[signal][int(segment)] == self.labels_dict["normal"]:
                     shutil.copy(filename, self.data_dir / dataset[0] / "normal" / f"{filename.stem}.png")
-                elif len(filename.stem.split("_")) == 3:
+                else:
                     shutil.copy(filename, self.data_dir / dataset[0] / "abnormal" / f"{filename.stem}.png")
     
     
@@ -120,4 +133,8 @@ class DataPreparation:
         if title is not None:
             plt.title(title)
         plt.pause(0.001)  # pause a bit so that plots are updated
-    
+
+
+if __name__ == '__main__':
+    dirmanag = DirManagement(project_dir='.\Figures', labels_dict={"abnormal": [], "normal": "N"})
+    dirmanag.write_data(dirmanag.all_filenames, dirmanag.all_filenames, dirmanag.all_filenames)
