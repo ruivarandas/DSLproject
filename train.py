@@ -1,27 +1,29 @@
 import torch
 import time
 import copy
+import numpy as np
 from sklearn import metrics
 
 
-def train_and_eval(model, criterion, optimizer, scheduler,device, dataloaders, dataset_sizes, num_epochs):
+def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs):
     since = time.time()
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
-
+    best_f1score = 0.0
     for epoch in range(num_epochs):
         print(f'Epoch {epoch}/{ num_epochs - 1}')
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        for phase in ['train', 'val', 'test']:
+        for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
                 model.eval()   # Set model to evaluate mode
 
             running_loss = 0.0
-            running_corrects = 0
+            y_pred = []
+            y_true = []
 
             # Iterate over data.
             for inputs, labels in dataloaders[phase]:
@@ -44,22 +46,24 @@ def train_and_eval(model, criterion, optimizer, scheduler,device, dataloaders, d
                         optimizer.step()
 
                 # statistics
+                for j in range(len(preds)):
+                    y_pred.append(int(preds[j].item()))
+                    y_true.append(int(labels.data[j].item()))
+
                 running_loss += loss.item() * inputs.size(0)
-                # print(preds, labels.data)
-                running_corrects += torch.sum(preds == labels.data)
+
             if phase == 'train':
                 scheduler.step()
-
             epoch_loss = running_loss / dataset_sizes[phase]
-            epoch_acc = running_corrects.double() / dataset_sizes[phase]
-            # epoch_acc_sk = metrics.accuracy_score(labels.data, preds)
-            print(torch.cat(preds).numpy())
-            print(labels.data)
-            print(f'{phase} Loss: {round(epoch_loss,4)} Acc: {round(epoch_acc,4)}')
+            epoch_acc = metrics.accuracy_score(y_pred, y_true)
+            f1_score = metrics.f1_score(y_pred, y_true)
+            print(f'{phase} Loss: {round(epoch_loss,4)} Acc: {round(epoch_acc,4)} F1Score: {round(f1_score, 4)}')
 
             # deep copy the model
-            if phase == 'val' and epoch_acc > best_acc:
+            # CHECK BELLOW
+            if phase == 'val' and epoch_acc > best_acc and f1_score > best_f1score:
                 best_acc = epoch_acc
+                best_f1score = f1_score
                 best_model_wts = copy.deepcopy(model.state_dict())
 
         print()

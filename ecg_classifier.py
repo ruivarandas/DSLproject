@@ -63,8 +63,12 @@ class ECGClassifier:
         Add differential learning rate
         :return:
         """
+        for name in self.model.parameters():
+            print(name)
+            # print(param)
         self.optimizer = optim.SGD(self.model.parameters(), lr=self.configurations["initial_learning_rate"],
                                    momentum=self.configurations["optimizer_momentum"])
+        # print(self.model.parameters())
         # Decay LR by a factor of 0.1 every 7 epochs
         self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=self.configurations["decay_step"],
                                                     gamma=self.configurations["lr_scheduler_gamma"])
@@ -93,10 +97,10 @@ class ECGClassifier:
         print("Folders created and data prepared")
         self._define_model()
         self._define_learning()
-        loss = self._loss()
-        model = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device, self.dataloaders,
-                               self.datasets_sizes, self.configurations["epochs"])
-        self._save_model(model)
+        # loss = self._loss()
+        # model = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device, self.dataloaders,
+        #                        self.datasets_sizes, self.configurations["epochs"])
+        # self._save_model(model)
 
 
 if __name__ == '__main__':
