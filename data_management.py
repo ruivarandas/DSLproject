@@ -76,9 +76,10 @@ class DirManagement:
                 print(f"{i+1}/{len(dataset[1])}", end='\r')
                 signal, segment = str(filename).split('\\')[2:]
                 segment = segment.split('_')[0]
-                if all_labels[signal][int(segment)] == self.labels_dict["normal"]:
+                print(all_labels[signal][int(segment)], self.labels_dict["normal"])
+                if all_labels[signal][int(segment)] in self.labels_dict["normal"]:
                     shutil.copy(filename, self.data_dir / dataset[0] / "normal" / f"{filename.stem}.png")
-                else:
+                elif all_labels[signal][int(segment)] in self.labels_dict["abnormal"]:
                     shutil.copy(filename, self.data_dir / dataset[0] / "abnormal" / f"{filename.stem}.png")
     
     
@@ -136,5 +137,5 @@ class DataPreparation:
 
 
 if __name__ == '__main__':
-    dirmanag = DirManagement(project_dir='.\Figures', labels_dict={"abnormal": [], "normal": "N"})
+    dirmanag = DirManagement(project_dir='.\Figures', labels_dict= {"abnormal": ["A", "a", "J", "S", "V", "E", "F", "P", "/", "f", "Q"], "normal": ["N", "L", "R", "e", "j"]})
     dirmanag.write_data(dirmanag.all_filenames, dirmanag.all_filenames, dirmanag.all_filenames)
