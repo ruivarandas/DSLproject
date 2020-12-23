@@ -1,6 +1,6 @@
 {
-  "data_dir": "/home/bbg/Documents/DSL/DSLproject/data",
-  "dirs_already_prepared": false,
+  "data_dir": "./data",
+  "dirs_already_prepared": true,
   "labels": {
     "abnormal": [
       "A",

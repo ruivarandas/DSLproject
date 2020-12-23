@@ -74,7 +74,7 @@ class DirManagement:
         for dataset in [("train", train_filenames), ("val", val_filenames), ("test", test_filenames)]:
             print(dataset[0])
             for i, filename in enumerate(dataset[1]):
-                # print(f"{i+1}/{len(dataset[1])}")
+                print(f"{i+1}/{len(dataset[1])}", end='\r')
                 signal, segment = str(filename).split(sep)[-2:]
                 segment = segment.split('_')[0]
                 # print(all_labels[signal][int(segment)], self.labels_dict["normal"])

@@ -15,6 +15,7 @@ from os import walk
 from os.path import join
 import numpy as np
 
+
 @attr.s(auto_attribs=True)
 class ECGClassifier:
     config_path: str
@@ -60,34 +61,21 @@ class ECGClassifier:
 
     def get_class_balance(self):
         normal, abnormal = 0, 0
-        data_dir = self.configurations["data_dir"]
-        for folder, files, _ in walk(data_dir):
-            for f in files:
-                print(f)
-                for folder1, files1, signals in walk(join(data_dir, f)):
-                    print("3")
-                    for signal in signals:
-                        print("4")
-                        if '.txt' in signal:
-
-                            f_ = join(join(data_dir, f), signal)
-                            print(f_)
-                            labels = np.loadtxt(f_, dtype=np.object)[1:, 1]
-                            for label in labels:
-                                print("5")
-                                if label in self.configurations["labels"]['normal']:
-                                    normal += 1
-                                elif label in self.configurations["labels"]['abnormal']:
-                                    abnormal += 1
-        print(normal)
-        print(abnormal)
-        print(f"normal={normal}\tabnormal={abnormal}\tunbalancement={abnormal / normal}")
+        data_dir = Path(self.configurations["data_dir"]) / "raw_figures"
+        for folder in data_dir.iterdir():
+            for signal in folder.glob("*.txt"):
+                labels = np.loadtxt(signal, dtype=np.object)[1:, 1]
+                for label in labels:
+                    if label in self.configurations["labels"]['normal']:
+                        normal += 1
+                    elif label in self.configurations["labels"]['abnormal']:
+                        abnormal += 1
         return {"normal": normal, "abnormal": abnormal}
 
     def _loss(self):
         weights = self.get_class_balance()
         total = weights["normal"] + weights["abnormal"]
-        weights = torch.FloatTensor([weights["normal"]/total, weights["abnormal"]/total])
+        weights = torch.FloatTensor([weights["normal"]/total, weights["abnormal"]/total]).to(self.device)
         return nn.CrossEntropyLoss(weight=weights)
 
     def _define_learning(self):
