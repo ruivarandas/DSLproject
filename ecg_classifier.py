@@ -11,9 +11,15 @@ import json
 import torch
 from datetime import datetime
 import matplotlib.pyplot as plt
-from os import walk
-from os.path import join
 import numpy as np
+import random
+import os
+
+
+def configure_seed(seed):
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
 
 
 @attr.s(auto_attribs=True)
@@ -64,7 +70,7 @@ class ECGClassifier:
         data_dir = Path(self.configurations["data_dir"]) / "raw_figures"
         for folder in data_dir.iterdir():
             for signal in folder.glob("*.txt"):
-                labels = np.loadtxt(signal, dtype=np.object)[1:, 1]
+                labels = np.loadtxt(signal.as_posix(), dtype=np.object)[1:, 1]
                 for label in labels:
                     if label in self.configurations["labels"]['normal']:
                         normal += 1
@@ -135,6 +141,7 @@ class ECGClassifier:
 
 
 if __name__ == '__main__':
+    configure_seed(42)
     model_init = ECGClassifier("config.json")
     model_init.train_and_eval()
 
