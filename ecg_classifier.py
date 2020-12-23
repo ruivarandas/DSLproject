@@ -46,7 +46,8 @@ class ECGClassifier:
 
     def _define_model(self):
         if self.configurations["model_name"] == "resnet50":
-            model = models.resnet50(pretrained=True)
+            model = models.resnet50(pretrained=False)
+
             n_feat = model.fc.in_features
             class_names = list(self.configurations["labels"].keys())
             model.fc = nn.Linear(n_feat, len(class_names))
@@ -64,12 +65,14 @@ class ECGClassifier:
         Add differential learning rate
         :return:
         """
-        # for name in self.model.parameters():
-        #     print(name)
-        #     # print(param)
-        self.optimizer = optim.SGD(self.model.parameters(), lr=self.configurations["initial_learning_rate"],
+        learning_rate_diff = [
+            {'params': self.model.layer1.parameters(), 'lr': 10e-2},
+            {'params': self.model.layer2.parameters(), 'lr': 10e-2},
+            {'params': self.model.layer3.parameters(), 'lr': 10e-4},
+            {'params': self.model.layer4.parameters(), 'lr': 10e-6},
+        ]
+        self.optimizer = optim.SGD(learning_rate_diff, lr=self.configurations["initial_learning_rate"],
                                    momentum=self.configurations["optimizer_momentum"])
-        # print(self.model.parameters())
         # Decay LR by a factor of 0.1 every 7 epochs
         self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=self.configurations["decay_step"],
                                                     gamma=self.configurations["lr_scheduler_gamma"])

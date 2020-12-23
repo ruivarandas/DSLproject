@@ -57,8 +57,6 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
 
                 running_loss += loss.item() * inputs.size(0)
 
-
-
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = sk_metrics.accuracy_score(y_pred, y_true)
             f1_score = sk_metrics.f1_score(y_pred, y_true)
@@ -83,6 +81,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
     time_elapsed = time.time() - since
     print(f'Training complete in {round(time_elapsed // 60,0)}m {round(time_elapsed % 60, 0)}s')
     print(f'Best val Acc: {round(best_acc,4)}')
+    print(f'Best val f1score: {round(best_f1score, 4)}')
 
     # load best model weights
     model.load_state_dict(best_model_wts)
