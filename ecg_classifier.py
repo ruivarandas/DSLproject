@@ -58,7 +58,11 @@ class ECGClassifier:
 
     @staticmethod
     def _loss():
-        return nn.CrossEntropyLoss()
+        from class_balance import get_class_balance
+        weights = get_class_balance()
+        total = weights["normal"] + weights["abnormal"]
+        weights = torch.FloatTensor([weights["normal"]/total, weights["abnormal"]/total])
+        return nn.CrossEntropyLoss(weight=weights)
 
     def _define_learning(self):
         """
@@ -66,10 +70,10 @@ class ECGClassifier:
         :return:
         """
         learning_rate_diff = [
-            {'params': self.model.layer1.parameters(), 'lr': 10e-2},
-            {'params': self.model.layer2.parameters(), 'lr': 10e-2},
+            {'params': self.model.layer1.parameters(), 'lr': 10e-6},
+            {'params': self.model.layer2.parameters(), 'lr': 10e-4},
             {'params': self.model.layer3.parameters(), 'lr': 10e-4},
-            {'params': self.model.layer4.parameters(), 'lr': 10e-6},
+            {'params': self.model.layer4.parameters(), 'lr': 10e-2},
         ]
         self.optimizer = optim.SGD(learning_rate_diff, lr=self.configurations["initial_learning_rate"],
                                    momentum=self.configurations["optimizer_momentum"])
