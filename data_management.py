@@ -87,7 +87,7 @@ class DirManagement:
 @attr.s(auto_attribs=True)
 class DataPreparation:
     data_dir: Path
-    device: str = attr.ib(default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), init=False)  
+    device: str = attr.ib(default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), init=False)
 
     @staticmethod
     def data_transformations():
@@ -122,6 +122,8 @@ class DataPreparation:
         dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
         class_names = image_datasets['train'].classes
         return dataloaders, dataset_sizes, class_names
+
+
     
     @staticmethod
     def imshow(inp, title=None):
