@@ -11,7 +11,9 @@ import json
 import torch
 from datetime import datetime
 import matplotlib.pyplot as plt
-
+from os import walk
+from os.path import join
+import numpy as np
 
 @attr.s(auto_attribs=True)
 class ECGClassifier:
@@ -56,10 +58,34 @@ class ECGClassifier:
             print("model not configured")
             raise ValueError
 
-    @staticmethod
-    def _loss():
-        from class_balance import get_class_balance
-        weights = get_class_balance()
+    def get_class_balance(self):
+        normal, abnormal = 0, 0
+        data_dir = self.configurations["data_dir"]
+        for folder, files, _ in walk(data_dir):
+            for f in files:
+                print(f)
+                for folder1, files1, signals in walk(join(data_dir, f)):
+                    print("3")
+                    for signal in signals:
+                        print("4")
+                        if '.txt' in signal:
+
+                            f_ = join(join(data_dir, f), signal)
+                            print(f_)
+                            labels = np.loadtxt(f_, dtype=np.object)[1:, 1]
+                            for label in labels:
+                                print("5")
+                                if label in self.configurations["labels"]['normal']:
+                                    normal += 1
+                                elif label in self.configurations["labels"]['abnormal']:
+                                    abnormal += 1
+        print(normal)
+        print(abnormal)
+        print(f"normal={normal}\tabnormal={abnormal}\tunbalancement={abnormal / normal}")
+        return {"normal": normal, "abnormal": abnormal}
+
+    def _loss(self):
+        weights = self.get_class_balance()
         total = weights["normal"] + weights["abnormal"]
         weights = torch.FloatTensor([weights["normal"]/total, weights["abnormal"]/total])
         return nn.CrossEntropyLoss(weight=weights)

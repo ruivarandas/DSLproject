@@ -6,6 +6,7 @@ import torch
 from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import numpy as np
+from os import sep
 
 
 @attr.s(auto_attribs=True)
@@ -73,10 +74,10 @@ class DirManagement:
         for dataset in [("train", train_filenames), ("val", val_filenames), ("test", test_filenames)]:
             print(dataset[0])
             for i, filename in enumerate(dataset[1]):
-                print(f"{i+1}/{len(dataset[1])}", end='\r')
-                signal, segment = str(filename).split('\\')[2:]
+                # print(f"{i+1}/{len(dataset[1])}")
+                signal, segment = str(filename).split(sep)[-2:]
                 segment = segment.split('_')[0]
-                print(all_labels[signal][int(segment)], self.labels_dict["normal"])
+                # print(all_labels[signal][int(segment)], self.labels_dict["normal"])
                 if all_labels[signal][int(segment)] in self.labels_dict["normal"]:
                     shutil.copy(filename, self.data_dir / dataset[0] / "normal" / f"{filename.stem}.png")
                 elif all_labels[signal][int(segment)] in self.labels_dict["abnormal"]:
