@@ -1,6 +1,6 @@
 {
   "data_dir": "./data",
-  "dirs_already_prepared": false,
+  "dirs_already_prepared": true,
   "labels": {
     "abnormal": [
       "A",
@@ -29,7 +29,7 @@
   "number_workers": 4,
   "shuffle_data": true,
   "batch_size": 4,
-  "epochs": 5,
+  "epochs": 100,
   "optimizer": "SGD",
   "initial_learning_rate": 0.001,
   "optimizer_momentum": 0.9,

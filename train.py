@@ -14,6 +14,9 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
     losses = []
     accs = []
     f1_scores = []
+    stop = False
+
+    val_losses, val_f1_scores = [], []
 
     for epoch in range(num_epochs):
         print(f'Epoch {epoch}/{ num_epochs - 1}')
@@ -68,6 +71,12 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                 accs.append(epoch_acc)
                 scheduler.step()
 
+            if phase == 'val':
+                val_losses.append(epoch_loss)
+                val_f1_scores.append(f1_score)
+
+                if val_losses[-1] >= np.mean(val_losses[-4:-1]) or val_f1_scores[-1] <= np.mean(val_f1_scores[-4:-1]):
+                    stop = True
 
             # deep copy the model
             # CHECK BELLOW
@@ -75,6 +84,10 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                 best_acc = epoch_acc
                 best_f1score = f1_score
                 best_model_wts = copy.deepcopy(model.state_dict())
+
+        if stop:
+            print(f"Stopped at epoch {epoch}.")
+            break
 
         print()
 
