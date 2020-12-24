@@ -1,6 +1,6 @@
 from pathlib import Path
 import shutil
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, LeavePGroupsOut
 import attr
 import torch
 from torchvision import datasets, transforms
@@ -41,6 +41,14 @@ class DirManagement:
             for txt in folder.glob("*.txt"):
                 all_labels[folder.name] = np.loadtxt(Path(folder) / txt.name, dtype=np.object)[1:, 1]
         return all_labels
+
+    @property
+    def groups(self):
+        groups = []
+        for folder in self.raw_data_dir.iterdir():
+            for txt in folder.glob("*.txt"):
+                groups.append([int(folder.parts[-1])] * len(np.loadtxt(Path(folder) / txt.name, dtype=np.object)[1:, 1]))
+        return np.concatenate(groups)
                 
     def create_datasets(self, test_size, val_size):
         """
@@ -79,9 +87,9 @@ class DirManagement:
                 segment = segment.split('_')[0]
                 # print(all_labels[signal][int(segment)], self.labels_dict["normal"])
                 if all_labels[signal][int(segment)] in self.labels_dict["normal"]:
-                    shutil.copy(filename, self.data_dir / dataset[0] / "normal" / f"{filename.stem}.png")
+                    shutil.copy(filename, self.data_dir / dataset[0] / "normal" / f"{filename.stem}_{signal}.png")
                 elif all_labels[signal][int(segment)] in self.labels_dict["abnormal"]:
-                    shutil.copy(filename, self.data_dir / dataset[0] / "abnormal" / f"{filename.stem}.png")
+                    shutil.copy(filename, self.data_dir / dataset[0] / "abnormal" / f"{filename.stem}_{signal}.png")
     
     
 @attr.s(auto_attribs=True)
