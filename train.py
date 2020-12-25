@@ -75,8 +75,9 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                 val_losses.append(epoch_loss)
                 val_f1_scores.append(f1_score)
 
-                if val_losses[-1] >= np.mean(val_losses[-4:-1]) or val_f1_scores[-1] <= np.mean(val_f1_scores[-4:-1]):
-                    stop = True
+                if epoch >= 4:
+                    if val_losses[-1] >= np.mean(val_losses[-4:-1]) or val_f1_scores[-1] <= np.mean(val_f1_scores[-4:-1]):
+                        stop = True
 
             # deep copy the model
             # CHECK BELLOW
