@@ -55,8 +55,7 @@ class ECGClassifier:
 
     def _define_model(self):
         if self.configurations["model_name"] == "resnet50":
-            model = models.resnet50(pretrained=False)
-
+            model = models.resnet50(pretrained=True)
             n_feat = model.fc.in_features
             class_names = list(self.configurations["labels"].keys())
             model.fc = nn.Linear(n_feat, len(class_names))
@@ -95,7 +94,7 @@ class ECGClassifier:
             {'params': self.model.layer3.parameters(), 'lr': 10e-4},
             {'params': self.model.layer4.parameters(), 'lr': 10e-2},
         ]
-        self.optimizer = optim.SGD(learning_rate_diff, lr=self.configurations["initial_learning_rate"],
+        self.optimizer = optim.SGD(learning_rate_diff, lr=self.configurations["initial_learning_rate"],weight_decay=0.1,
                                    momentum=self.configurations["optimizer_momentum"])
         # Decay LR by a factor of 0.1 every 7 epochs
         self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=self.configurations["decay_step"],
