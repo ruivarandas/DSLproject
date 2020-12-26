@@ -94,7 +94,8 @@ class ECGClassifier:
             {'params': self.model.layer3.parameters(), 'lr': 10e-4},
             {'params': self.model.layer4.parameters(), 'lr': 10e-2},
         ]
-        self.optimizer = optim.SGD(learning_rate_diff, lr=self.configurations["initial_learning_rate"],weight_decay=0.1,
+        self.optimizer = optim.SGD(learning_rate_diff,
+                                   weight_decay=self.configurations["weight_decay"],
                                    momentum=self.configurations["optimizer_momentum"])
         # Decay LR by a factor of 0.1 every 7 epochs
         self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=self.configurations["decay_step"],
@@ -106,7 +107,7 @@ class ECGClassifier:
         name = f"{self.configurations['model_name']}_{now.strftime('d_%d_t_%H:%M')}"
         trained_model_filepath = path / f"{name}.pth"
         model_config_filepath = path / f"{name}.json"
-        torch.save(model.state_dict(), trained_model_filepath.as_posix())
+        torch.save(model, trained_model_filepath.as_posix())
 
         with open(self.config_path) as json_file:
             data = json.load(json_file)
@@ -125,22 +126,23 @@ class ECGClassifier:
         self._define_model()
         self._define_learning()
         loss = self._loss()
-        model, metrics = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device, self.dataloaders,
+        model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device, self.dataloaders,
                                self.datasets_sizes, self.configurations["epochs"])
         self._save_model(model, metrics)
         for metric in metrics:
-            self.plot(metrics[metric], metric, f"{metric}_per_epoch")
+            self.plot(metrics[metric], epoch, metric, f"{metric}_per_epoch")
 
-    def plot(self, plottable, ylabel='', name=''):
+    def plot(self, plottable, epochs, ylabel='', name=''):
         plt.clf()
         plt.xlabel('Epoch')
         plt.ylabel(ylabel)
-        plt.plot(list(range(self.configurations["epochs"])), plottable)
+        plt.plot(list(range(epochs)), plottable)
         plt.savefig(f'plots/{name}.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':
     configure_seed(42)
+    test_only = False
     model_init = ECGClassifier("config.json")
     model_init.train_and_eval()
 

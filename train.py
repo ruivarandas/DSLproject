@@ -17,11 +17,10 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
     stop = False
 
     val_losses, val_f1_scores = [], []
-
+    current_epoch = num_epochs
     for epoch in range(num_epochs):
         print(f'Epoch {epoch}/{ num_epochs - 1}')
         print('-' * 10)
-
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
@@ -88,6 +87,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
 
         if stop:
             print(f"Stopped at epoch {epoch}.")
+            current_epoch = epoch
             break
 
         print()
@@ -104,4 +104,4 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
         "f1_score": f1_scores,
         "acc": accs,
     }
-    return model, metrics
+    return model, metrics, current_epoch
