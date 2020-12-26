@@ -98,7 +98,13 @@ class ECGClassifier:
         #     {'params': self.model.layer3.parameters(), 'lr': 10e-4},
         #     {'params': self.model.layer4.parameters(), 'lr': 10e-2},
         # ]
-        self.optimizer = optim.SGD(self.model.parameters(),
+        learning_rate_diff = [
+            {'params': self.model.layer1.parameters(), 'lr': 0},
+            {'params': self.model.layer2.parameters(), 'lr': 0},
+            {'params': self.model.layer3.parameters(), 'lr': 0},
+            {'params': self.model.layer4.parameters(), 'lr': 1e-2},
+        ]
+        self.optimizer = optim.SGD(learning_rate_diff,
                                    weight_decay=self.configurations["weight_decay"],
                                    momentum=self.configurations["optimizer_momentum"],
                                    lr=self.configurations["learning_rate"])
@@ -142,7 +148,7 @@ class ECGClassifier:
         plt.clf()
         plt.xlabel('Epoch')
         plt.ylabel(ylabel)
-        plt.plot(list(range(epochs)), plottable)
+        plt.plot(plottable)
         plt.savefig(f'plots/{name}.pdf', bbox_inches='tight')
 
 
