@@ -59,6 +59,9 @@ class ECGClassifier:
             model = models.resnet50(pretrained=True)
         elif self.configurations["model_name"] == "resnet18":
             model = models.resnet18(pretrained=True)
+        elif self.configurations["model_name"] == "alexnet":
+            model = models.alexnet(pretrained=True)
+            model.l
 
         n_feat = model.fc.in_features
         class_names = list(self.configurations["labels"].keys())
@@ -89,15 +92,17 @@ class ECGClassifier:
         Add differential learning rate
         :return:
         """
-        learning_rate_diff = [
-            {'params': self.model.layer1.parameters(), 'lr': 10e-6},
-            {'params': self.model.layer2.parameters(), 'lr': 10e-4},
-            {'params': self.model.layer3.parameters(), 'lr': 10e-4},
-            {'params': self.model.layer4.parameters(), 'lr': 10e-2},
-        ]
-        self.optimizer = optim.SGD(learning_rate_diff,
+        # learning_rate_diff = [
+        #     {'params': self.model.layer1.parameters(), 'lr': 10e-6},
+        #     {'params': self.model.layer2.parameters(), 'lr': 10e-4},
+        #     {'params': self.model.layer3.parameters(), 'lr': 10e-4},
+        #     {'params': self.model.layer4.parameters(), 'lr': 10e-2},
+        # ]
+        self.optimizer = optim.SGD(self.model.parameters(),
                                    weight_decay=self.configurations["weight_decay"],
-                                   momentum=self.configurations["optimizer_momentum"])
+                                   momentum=self.configurations["optimizer_momentum"],
+                                   lr=self.configurations["learning_rate"])
+
         # Decay LR by a factor of 0.1 every 7 epochs
         self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=self.configurations["decay_step"],
                                                     gamma=self.configurations["lr_scheduler_gamma"])
