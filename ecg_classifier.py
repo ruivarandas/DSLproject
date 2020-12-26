@@ -54,15 +54,16 @@ class ECGClassifier:
                                                                                                self.configurations["number_workers"])
 
     def _define_model(self):
+        model = None
         if self.configurations["model_name"] == "resnet50":
             model = models.resnet50(pretrained=True)
-            n_feat = model.fc.in_features
-            class_names = list(self.configurations["labels"].keys())
-            model.fc = nn.Linear(n_feat, len(class_names))
-            self.model = model.to(self.device)
-        else:
-            print("model not configured")
-            raise ValueError
+        elif self.configurations["model_name"] == "resnet18":
+            model = models.resnet18(pretrained=True)
+
+        n_feat = model.fc.in_features
+        class_names = list(self.configurations["labels"].keys())
+        model.fc = nn.Linear(n_feat, len(class_names))
+        self.model = model.to(self.device)
 
     def get_class_balance(self):
         normal, abnormal = 0, 0
