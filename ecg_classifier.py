@@ -45,6 +45,7 @@ class ECGClassifier:
             train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
                                                         self.configurations["val_fraction"])
             dir_prep.write_data(train, val, test)
+
             data_prep = DataPreparation(dir_prep.data_dir)
         else:
             data_prep = DataPreparation(Path(self.configurations["data_dir"]) / "figures")
