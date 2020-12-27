@@ -145,11 +145,12 @@ class ECGClassifier:
             self.plot(metrics[metric], metric, f"{metric}_per_epoch")
 
     def plot(self, plottable, ylabel='', name=''):
+        now = datetime.now()
         plt.clf()
         plt.xlabel('Epoch')
         plt.ylabel(ylabel)
         plt.plot(plottable)
-        plt.savefig(f'plots/{name}.pdf', bbox_inches='tight')
+        plt.savefig(f'plots/{name}_{now.strftime("d_%d_t_%H:%M")}.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':
