@@ -42,16 +42,18 @@ class ECGClassifier:
     def _prepare_data(self):
         if not self.configurations["dirs_already_prepared"]:
             dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels"])
-            train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"], self.configurations["val_fraction"])
+            train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
+                                                        self.configurations["val_fraction"])
             dir_prep.write_data(train, val, test)
             data_prep = DataPreparation(dir_prep.data_dir)
         else:
             data_prep = DataPreparation(Path(self.configurations["data_dir"]) / "figures")
 
         self.device = data_prep.device
-        self.dataloaders, self.datasets_sizes, self.class_names = data_prep.create_dataloaders(self.configurations["batch_size"],
-                                                                                               self.configurations["shuffle_data"],
-                                                                                               self.configurations["number_workers"])
+        self.dataloaders, self.datasets_sizes, self.class_names = data_prep.create_dataloaders(
+            self.configurations["batch_size"],
+            self.configurations["shuffle_data"],
+            self.configurations["number_workers"])
 
     def _define_model(self):
         model = None
@@ -59,10 +61,6 @@ class ECGClassifier:
             model = models.resnet50(pretrained=True)
         elif self.configurations["model_name"] == "resnet18":
             model = models.resnet18(pretrained=True)
-        elif self.configurations["model_name"] == "alexnet":
-            model = models.alexnet(pretrained=True)
-            model.l
-
         n_feat = model.fc.in_features
         class_names = list(self.configurations["labels"].keys())
         model.fc = nn.Linear(n_feat, len(class_names))
@@ -84,7 +82,7 @@ class ECGClassifier:
     def _loss(self):
         weights = self.get_class_balance()
         total = weights["normal"] + weights["abnormal"]
-        weights = torch.FloatTensor([weights["normal"]/total, weights["abnormal"]/total]).to(self.device)
+        weights = torch.FloatTensor([weights["normal"] / total, weights["abnormal"] / total]).to(self.device)
         return nn.CrossEntropyLoss(weight=weights)
 
     def _define_learning(self):
@@ -92,28 +90,28 @@ class ECGClassifier:
         Add differential learning rate
         :return:
         """
-        # learning_rate_diff = [
-        #     {'params': self.model.layer1.parameters(), 'lr': 10e-6},
-        #     {'params': self.model.layer2.parameters(), 'lr': 10e-4},
-        #     {'params': self.model.layer3.parameters(), 'lr': 10e-4},
-        #     {'params': self.model.layer4.parameters(), 'lr': 10e-2},
-        # ]
-        learning_rate_diff = [
-            {'params': self.model.layer1.parameters(), 'lr': 0},
-            {'params': self.model.layer2.parameters(), 'lr': 0},
-            {'params': self.model.layer3.parameters(), 'lr': 0},
-            {'params': self.model.layer4.parameters(), 'lr': 1e-2},
-        ]
-        self.optimizer = optim.SGD(learning_rate_diff,
-                                   weight_decay=self.configurations["weight_decay"],
-                                   momentum=self.configurations["optimizer_momentum"],
-                                   lr=self.configurations["learning_rate"])
+        if self.configurations["diff_learn"]:
+            learning_rate_diff = [
+                {'params': self.model.layer1.parameters(), 'lr': 10e-6},
+                {'params': self.model.layer2.parameters(), 'lr': 10e-4},
+                {'params': self.model.layer3.parameters(), 'lr': 10e-4},
+                {'params': self.model.layer4.parameters(), 'lr': 10e-2},
+            ]
+            self.optimizer = optim.SGD(learning_rate_diff,
+                                       weight_decay=self.configurations["weight_decay"],
+                                       momentum=self.configurations["optimizer_momentum"])
+        else:
+            self.optimizer = optim.SGD(self.model.parameters(),
+                                       weight_decay=self.configurations["weight_decay"],
+                                       momentum=self.configurations["optimizer_momentum"],
+                                       lr=self.configurations["initial_learning_rate"])
+
 
         # Decay LR by a factor of 0.1 every 7 epochs
         self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=self.configurations["decay_step"],
                                                     gamma=self.configurations["lr_scheduler_gamma"])
 
-    def _save_model(self, model, metrics):
+    def _save_model(self, model, metrics, epoch):
         now = datetime.now()
         path = Path.cwd() / "models"
         name = f"{self.configurations['model_name']}_{now.strftime('d_%d_t_%H_%M')}"
@@ -125,6 +123,7 @@ class ECGClassifier:
             data = json.load(json_file)
 
         data["last_trained_model"] = trained_model_filepath.as_posix()
+        data["epochs"] = epoch
 
         with open(self.config_path, 'w') as outfile:
             json.dump(data, outfile)
@@ -138,18 +137,20 @@ class ECGClassifier:
         self._define_model()
         self._define_learning()
         loss = self._loss()
-        model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device, self.dataloaders,
-                               self.datasets_sizes, self.configurations["epochs"])
-        self._save_model(model, metrics)
+        model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device,
+                                               self.dataloaders,
+                                               self.datasets_sizes, self.configurations["epochs"])
+        self._save_model(self.model, metrics, epoch)
         for metric in metrics:
-            self.plot(metrics[metric], epoch, metric, f"{metric}_per_epoch")
+            self.plot(metrics[metric], metric, f"{metric}_per_epoch")
 
-    def plot(self, plottable, epochs, ylabel='', name=''):
+    def plot(self, plottable, ylabel='', name=''):
+        now = datetime.now()
         plt.clf()
         plt.xlabel('Epoch')
         plt.ylabel(ylabel)
         plt.plot(plottable)
-        plt.savefig(f'plots/{name}.pdf', bbox_inches='tight')
+        plt.savefig(f'plots/{name}_{now.strftime("d_%d_t_%H:%M")}.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':
@@ -157,4 +158,3 @@ if __name__ == '__main__':
     test_only = False
     model_init = ECGClassifier("config.json")
     model_init.train_and_eval()
-
