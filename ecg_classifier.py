@@ -116,7 +116,7 @@ class ECGClassifier:
     def _save_model(self, model, metrics):
         now = datetime.now()
         path = Path.cwd() / "models"
-        name = f"{self.configurations['model_name']}_{now.strftime('d_%d_t_%H:%M')}"
+        name = f"{self.configurations['model_name']}_{now.strftime('d_%d_t_%H_%M')}"
         trained_model_filepath = path / f"{name}.pth"
         model_config_filepath = path / f"{name}.json"
         torch.save(model, trained_model_filepath.as_posix())
