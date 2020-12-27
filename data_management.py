@@ -120,7 +120,7 @@ class DataPreparation:
             ])
         }
         return data_transforms
-    
+
     def create_dataloaders(self, batch_size, shuffle, num_workers):
         data_transforms = self.data_transformations()
         image_datasets = {x: datasets.ImageFolder((self.data_dir / x).as_posix(), data_transforms[x]) for x in ['train', 'val', 'test']}
