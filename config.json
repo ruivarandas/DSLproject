@@ -28,15 +28,15 @@
   "model_name": "resnet50",
   "number_workers": 4,
   "shuffle_data": true,
-  "batch_size": 4,
-  "epochs": 4,
+  "batch_size": 128,
+  "epochs": 15,
+  "early_stop": false,
+  "pretrained": true,
   "diff_learn": true,
   "optimizer": "SGD",
-  "initial_learning_rate": 0.001,
-  "optimizer_momentum": 0.9,
+  "initial_learning_rate": 0.01,
   "weight_decay": 0.1,
-  "learning_rate": 0.001,
-  "decay_step": 2,
+  "decay_step": 4,
   "lr_scheduler_gamma": 0.1,
-  "last_trained_model": "/home/bbg/Documents/DSL/DSLproject/models/resnet50_d_27_t_00:06.pth"
+  "last_trained_model": ""
 }

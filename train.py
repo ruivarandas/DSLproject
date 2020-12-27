@@ -5,7 +5,7 @@ import numpy as np
 from sklearn import metrics as sk_metrics
 
 
-def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs):
+def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs, early_stop):
     since = time.time()
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -74,7 +74,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                 val_losses.append(epoch_loss)
                 val_f1_scores.append(f1_score)
 
-                if epoch >= 4:
+                if epoch >= 4 and early_stop:
                     if val_losses[-1] >= np.mean(val_losses[-4:-1]) or val_f1_scores[-1] <= np.mean(val_f1_scores[-4:-1]):
                         stop = True
 
@@ -103,5 +103,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
         "loss": losses,
         "f1_score": f1_scores,
         "acc": accs,
+        "best val acc": round(best_acc, 4),
+        "best val f1": round(best_f1score, 4)
     }
     return model, metrics, current_epoch

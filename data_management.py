@@ -108,7 +108,7 @@ class DataPreparation:
             ]),
             'val': transforms.Compose([
                 transforms.CenterCrop((200, 1500)),
-                transforms.Resize((224,224)),
+                transforms.Resize((224, 224)),
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ]),
@@ -152,5 +152,6 @@ class DataPreparation:
 
 
 if __name__ == '__main__':
-    dirmanag = DirManagement(project_dir='.\\data', labels_dict= {"abnormal": ["A", "a", "J", "S", "V", "E", "F", "P", "/", "f", "Q"], "normal": ["N", "L", "R", "e", "j"]})
-    dirmanag.write_data(dirmanag.all_filenames, dirmanag.all_filenames, dirmanag.all_filenames)
+    # dirmanag = DirManagement(project_dir='./data', labels_dict={"abnormal": ["A", "a", "J", "S", "V", "E", "F", "P", "/", "f", "Q"], "normal": ["N", "L", "R", "e", "j"]})
+    # dirmanag.write_data(dirmanag.all_filenames, dirmanag.all_filenames, dirmanag.all_filenames)
+    DataPreparation(Path('./data/figures')).create_dataloaders(4,True,8)

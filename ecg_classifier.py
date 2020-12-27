@@ -59,7 +59,11 @@ class ECGClassifier:
     def _define_model(self):
         model = None
         if self.configurations["model_name"] == "resnet50":
-            model = models.resnet50(pretrained=True)
+            if self.configurations["pretrained"]:
+                model = models.resnet50(pretrained=True)
+            else:
+                model = models.resnet50(pretrained=False)
+
         elif self.configurations["model_name"] == "resnet18":
             model = models.resnet18(pretrained=True)
         n_feat = model.fc.in_features
@@ -92,24 +96,22 @@ class ECGClassifier:
         :return:
         """
         if self.configurations["diff_learn"]:
-            learning_rate_diff = [
-                {'params': self.model.layer1.parameters(), 'lr': 10e-6},
-                {'params': self.model.layer2.parameters(), 'lr': 10e-4},
-                {'params': self.model.layer3.parameters(), 'lr': 10e-4},
+            parameters = [
+                {'params': self.model.layer1.parameters(), 'lr': 0},
+                {'params': self.model.layer2.parameters(), 'lr': 0},
+                {'params': self.model.layer3.parameters(), 'lr': 0},
                 {'params': self.model.layer4.parameters(), 'lr': 10e-2},
             ]
-            self.optimizer = optim.SGD(learning_rate_diff,
-                                       weight_decay=self.configurations["weight_decay"],
-                                       momentum=self.configurations["optimizer_momentum"])
         else:
-            self.optimizer = optim.SGD(self.model.parameters(),
-                                       weight_decay=self.configurations["weight_decay"],
-                                       momentum=self.configurations["optimizer_momentum"],
-                                       lr=self.configurations["initial_learning_rate"])
+            parameters = self.model.parameters()
 
+        self.optimizer = optim.Adam(parameters,
+                                    weight_decay=self.configurations["weight_decay"],
+                                    lr=self.configurations["initial_learning_rate"])
 
         # Decay LR by a factor of 0.1 every 7 epochs
-        self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=self.configurations["decay_step"],
+        self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer,
+                                                    step_size=self.configurations["decay_step"],
                                                     gamma=self.configurations["lr_scheduler_gamma"])
 
     def _save_model(self, model, metrics, epoch):
@@ -139,8 +141,8 @@ class ECGClassifier:
         self._define_learning()
         loss = self._loss()
         model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device,
-                                               self.dataloaders,
-                                               self.datasets_sizes, self.configurations["epochs"])
+                                               self.dataloaders, self.datasets_sizes, self.configurations["epochs"],
+                                               self.configurations["early_stop"])
         self._save_model(self.model, metrics, epoch)
         for metric in metrics:
             self.plot(metrics[metric], metric, f"{metric}_per_epoch")
@@ -151,7 +153,7 @@ class ECGClassifier:
         plt.xlabel('Epoch')
         plt.ylabel(ylabel)
         plt.plot(plottable)
-        plt.savefig(f'plots/{name}_{now.strftime("d_%d_t_%H:%M")}.pdf', bbox_inches='tight')
+        plt.savefig(f'plots/{name}_{now.strftime("d_%d_t_%H_%M")}.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':
