@@ -66,11 +66,12 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
 
             if phase == 'train':
                 losses.append(epoch_loss)
-                f1_scores.append(f1_score)
-                accs.append(epoch_acc)
                 scheduler.step()
 
             if phase == 'val':
+                f1_scores.append(f1_score)
+                accs.append(epoch_acc)
+
                 val_losses.append(epoch_loss)
                 val_f1_scores.append(f1_score)
 
@@ -100,9 +101,9 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
     # load best model weights
     model.load_state_dict(best_model_wts)
     metrics = {
-        "loss": losses,
-        "f1_score": f1_scores,
-        "acc": accs,
+        "loss train": losses,
+        "f1_score val": f1_scores,
+        "acc val": accs,
         "best val acc": round(best_acc, 4),
         "best val f1": round(best_f1score, 4)
     }
