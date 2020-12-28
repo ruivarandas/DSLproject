@@ -51,7 +51,8 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-
+                y_true.append(labels)
+                y_pred.append(preds)
                 running_loss += loss.item() * inputs.size(0)
 
             y_pred = np.concatenate(y_pred)
