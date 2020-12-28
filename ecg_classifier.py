@@ -103,8 +103,9 @@ class ECGClassifier:
             parameters = [
                 {'params': self.model.layer1.parameters(), 'lr': 0},
                 {'params': self.model.layer2.parameters(), 'lr': 0},
-                {'params': self.model.layer3.parameters(), 'lr': 0},
-                {'params': self.model.layer4.parameters(), 'lr': 10e-2},
+                {'params': self.model.layer3.parameters(), 'lr': 10e-10},
+                {'params': self.model.layer4.parameters(), 'lr': 10e-6},
+                {'params': self.model.fc.parameters(), 'lr': 10e-4}
             ]
         else:
             parameters = self.model.parameters()
