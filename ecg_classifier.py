@@ -85,10 +85,14 @@ class ECGClassifier:
         return {"normal": normal, "abnormal": abnormal}
 
     def _loss(self):
-        weights = self.get_class_balance()
-        total = weights["normal"] + weights["abnormal"]
-        weights = torch.FloatTensor([weights["abnormal"] / total, weights["normal"] / total]).to(self.device)
-        return nn.CrossEntropyLoss(weight=weights)
+        if self.configurations["weighted_loss"]:
+            weights = self.get_class_balance()
+            total = weights["normal"] + weights["abnormal"]
+            weights = torch.FloatTensor([weights["normal"] / total, weights["abnormal"] / total]).to(self.device)
+            loss = nn.CrossEntropyLoss(weight=weights)
+        else:
+            loss = nn.CrossEntropyLoss()
+        return loss
 
     def _define_learning(self):
         """
