@@ -52,13 +52,10 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                         loss.backward()
                         optimizer.step()
 
-                # statistics
-                for j in range(len(preds)):
-                    y_pred.append(int(preds[j].item()))
-                    y_true.append(int(labels.data[j].item()))
-
                 running_loss += loss.item() * inputs.size(0)
 
+            y_pred = np.concatenate(y_pred)
+            y_true = np.concatenate(y_true)
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = sk_metrics.accuracy_score(y_pred, y_true)
             f1_score = sk_metrics.f1_score(y_pred, y_true)
