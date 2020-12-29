@@ -19,6 +19,6 @@ if __name__ == "__main__":
                 makedirs(new_folder)
             with open(join('./labels', str(file)+'.txt'), 'w') as f:
                 f.write("Sample\tLabel\n")
-            for i, segment in enumerate(labels[4:]):
+            for i, segment in enumerate(labels[5:]):
                 with open(join('./labels', str(file) + '.txt'), 'a') as f:
-                    f.write(str(i) + '\t' + labels[i+4] + '\n')
+                    f.write(str(i) + '\t' + labels[i+5] + '\n')
