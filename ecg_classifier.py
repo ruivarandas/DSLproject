@@ -64,8 +64,10 @@ class ECGClassifier:
             else:
                 model = models.resnet50(pretrained=False)
 
-        elif self.configurations["model_name"] == "resnet18":
-            model = models.resnet18(pretrained=True)
+        elif self.configurations["model_name"] == "inception":
+            model = models.inception_v3(pretrained=True)
+            
+            
         n_feat = model.fc.in_features
         class_names = list(self.configurations["labels"].keys())
         model.fc = nn.Linear(n_feat, len(class_names))
@@ -100,19 +102,25 @@ class ECGClassifier:
         :return:
         """
         if self.configurations["diff_learn"]:
-            parameters = [
-                {'params': self.model.layer1.parameters(), 'lr': 0},
-                {'params': self.model.layer2.parameters(), 'lr': 0},
-                {'params': self.model.layer3.parameters(), 'lr': 10e-10},
-                {'params': self.model.layer4.parameters(), 'lr': 10e-6},
-                {'params': self.model.fc.parameters(), 'lr': 10e-4}
-            ]
-        else:
-            parameters = self.model.parameters()
+            if self.configurations["model_name"] == "inception":
+                parameters = [
+                    {"params": self.model.Mixed_7a.parameters(), "lr": 1e-6},
+                    {"params": self.model.Mixed_7b.parameters(), "lr": 1e-6},
+                    {"params": self.model.Mixed_7c.parameters(), "lr": 1e-6},
+                    {"params": self.model.fc.parameters(), "lr": 1e-4}
+                ]
+            else:
+                parameters = [
+                    {'params': self.model.layer1.parameters(), 'lr': 0},
+                    {'params': self.model.layer2.parameters(), 'lr': 0},
+                    {'params': self.model.layer3.parameters(), 'lr': 10e-10},
+                    {'params': self.model.layer4.parameters(), 'lr': 10e-6},
+                    {'params': self.model.fc.parameters(), 'lr': 10e-4}
+                ]
 
         self.optimizer = optim.Adam(parameters,
                                     weight_decay=self.configurations["weight_decay"],
-                                    lr=self.configurations["initial_learning_rate"])
+                                    lr=self.configurations["learning_rate"])
 
         # Decay LR by a factor of 0.1 every 7 epochs
         self.exp_lr_scheduler = lr_scheduler.StepLR(self.optimizer,
