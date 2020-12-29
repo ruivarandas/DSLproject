@@ -131,7 +131,6 @@ class DataPreparation:
     def create_dataloaders(self, batch_size, shuffle, num_workers):
         data_transforms = self.data_transformations()
         image_datasets = {x: datasets.ImageFolder((self.data_dir / x).as_posix(), data_transforms[x]) for x in ['train', 'val', 'test']}
-        print(image_datasets)
         dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers) for x in ['train', 'val', 'test']}
         dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
         class_names = image_datasets['train'].classes

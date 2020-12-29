@@ -51,15 +51,18 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
+                        
                 y_true.append(labels.cpu().numpy())
                 y_pred.append(preds.cpu().numpy())
                 running_loss += loss.item() * inputs.size(0)
 
             y_pred = np.concatenate(y_pred)
             y_true = np.concatenate(y_true)
+            
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = sk_metrics.accuracy_score(y_pred, y_true)
             f1_score = sk_metrics.f1_score(y_pred, y_true)
+            
             print(f'{phase} Loss: {round(epoch_loss,4)} Acc: {round(epoch_acc,4)} F1Score: {round(f1_score, 4)}')
 
             if phase == 'train':
@@ -69,12 +72,10 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
             if phase == 'val':
                 f1_scores.append(f1_score)
                 accs.append(epoch_acc)
-
-                val_losses.append(epoch_loss)
                 val_f1_scores.append(f1_score)
 
                 if epoch >= 4 and early_stop:
-                    if val_losses[-1] >= np.mean(val_losses[-4:-1]) or val_f1_scores[-1] <= np.mean(val_f1_scores[-4:-1]):
+                    if val_f1_scores[-1] <= np.mean(val_f1_scores[-4:-1]):
                         stop = True
 
             # deep copy the model
