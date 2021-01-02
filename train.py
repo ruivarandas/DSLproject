@@ -13,7 +13,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
 
     losses = []
     accs = []
-    f1_scores = []
+    f1_scores, precision_scores = [], []
     stop = False
 
     val_losses, val_f1_scores = [], []
@@ -62,6 +62,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = sk_metrics.accuracy_score(y_pred, y_true)
             f1_score = sk_metrics.f1_score(y_pred, y_true)
+            precision = sk_metrics.precision_score(y_pred, y_true)
             
             print(f'{phase} Loss: {round(epoch_loss,4)} Acc: {round(epoch_acc,4)} F1Score: {round(f1_score, 4)}')
 
@@ -73,6 +74,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                 f1_scores.append(f1_score)
                 accs.append(epoch_acc)
                 val_f1_scores.append(f1_score)
+                precision_scores.append(precision)
 
                 if epoch >= 4 and early_stop:
                     if val_f1_scores[-1] <= np.mean(val_f1_scores[-4:-1]):

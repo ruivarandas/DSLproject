@@ -6,6 +6,7 @@ if __name__ == "__main__":
     parser.add_argument("-i")
     parser.add_argument("-f")
     args = parser.parse_args()
+    index = 3
     for file in range(int(args.i), int(args.f)):
         if file not in [110, 120, 204, 206, 211, 216, 218, 224, 225, 226, 227, 229]:
             print(file)
@@ -19,6 +20,6 @@ if __name__ == "__main__":
                 makedirs(new_folder)
             with open(join('./labels', str(file)+'.txt'), 'w') as f:
                 f.write("Sample\tLabel\n")
-            for i, segment in enumerate(labels[5:]):
+            for i, segment in enumerate(labels[index:]):
                 with open(join('./labels', str(file) + '.txt'), 'a') as f:
-                    f.write(str(i) + '\t' + labels[i+5] + '\n')
+                    f.write(str(i) + '\t' + labels[i+index] + '\n')
