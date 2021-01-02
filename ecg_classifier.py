@@ -62,11 +62,7 @@ class ECGClassifier:
             if self.configurations["pretrained"]:
                 model = models.resnet50(pretrained=True)
             else:
-                model = models.resnet50(pretrained=False)
-
-        elif self.configurations["model_name"] == "inception":
-            model = models.inception_v3(pretrained=True)
-            
+                model = models.resnet50(pretrained=False)           
             
         n_feat = model.fc.in_features
         class_names = list(self.configurations["labels"].keys())
@@ -102,21 +98,14 @@ class ECGClassifier:
         :return:
         """
         if self.configurations["diff_learn"]:
-            if self.configurations["model_name"] == "inception":
-                parameters = [
-                    {"params": self.model.Mixed_7a.parameters(), "lr": 1e-6},
-                    {"params": self.model.Mixed_7b.parameters(), "lr": 1e-6},
-                    {"params": self.model.Mixed_7c.parameters(), "lr": 1e-6},
-                    {"params": self.model.fc.parameters(), "lr": 1e-4}
-                ]
-            else:
-                parameters = [
-                    {'params': self.model.layer1.parameters(), 'lr': 1e-4},
-                    {'params': self.model.layer2.parameters(), 'lr': 1e-4},
-                    {'params': self.model.layer3.parameters(), 'lr': 1e-4},
-                    {'params': self.model.layer4.parameters(), 'lr': 1e-4},
-                    {'params': self.model.fc.parameters(), 'lr': 1e-4}
-                ]
+            
+            parameters = [
+                {'params': self.model.layer1.parameters(), 'lr': 1e-4},
+                {'params': self.model.layer2.parameters(), 'lr': 1e-4},
+                {'params': self.model.layer3.parameters(), 'lr': 1e-4},
+                {'params': self.model.layer4.parameters(), 'lr': 1e-4},
+                {'params': self.model.fc.parameters(), 'lr': 1e-4}
+            ]
 
         self.optimizer = optim.Adam(parameters,
                                     weight_decay=self.configurations["weight_decay"],
@@ -158,7 +147,8 @@ class ECGClassifier:
                                                self.configurations["early_stop"])
         self._save_model(self.model, metrics, epoch)
         for metric in metrics:
-            self.plot(metrics[metric], metric, f"{metric}_per_epoch")
+            if metric.split(" ")[0] != "best":
+                self.plot(metrics[metric], metric, f"{metric}_per_epoch")
 
     def plot(self, plottable, ylabel='', name=''):
         now = datetime.now()
@@ -171,6 +161,5 @@ class ECGClassifier:
 
 if __name__ == '__main__':
     configure_seed(42)
-    test_only = False
     model_init = ECGClassifier("config.json")
     model_init.train_and_eval()
