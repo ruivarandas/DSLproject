@@ -10,7 +10,8 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
     best_f1score = 0.0
-
+    best_prec = 0.0
+    
     losses = []
     accs = []
     f1_scores, precision_scores = [], []
@@ -55,7 +56,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                 y_true.append(labels.cpu().numpy())
                 y_pred.append(preds.cpu().numpy())
                 running_loss += loss.item() * inputs.size(0)
-
+                
             y_pred = np.concatenate(y_pred)
             y_true = np.concatenate(y_true)
             
@@ -85,6 +86,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
             if phase == 'val' and epoch_acc > best_acc and f1_score > best_f1score:
                 best_acc = epoch_acc
                 best_f1score = f1_score
+                best_prec = precision
                 best_model_wts = copy.deepcopy(model.state_dict())
 
         if stop:
@@ -105,7 +107,9 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
         "loss train": losses,
         "f1_score val": f1_scores,
         "acc val": accs,
+        "prec val": precision_scores,
         "best val acc": round(best_acc, 4),
-        "best val f1": round(best_f1score, 4)
+        "best val f1": round(best_f1score, 4),
+        "best val precision": round(best_prec, 4)
     }
     return model, metrics, current_epoch

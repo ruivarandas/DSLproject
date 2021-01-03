@@ -20,7 +20,7 @@ class DirManagement:
     
     @property
     def data_dir(self):
-        return Path(self.project_dir) / "figures"
+        return Path(self.project_dir) / "figures_mid"
     
     @property
     def raw_data_dir(self):
