@@ -20,7 +20,7 @@ class DirManagement:
     
     @property
     def data_dir(self):
-        return Path(self.project_dir) / "figures_mid"
+        return Path(self.project_dir) / "figures"
     
     @property
     def raw_data_dir(self):
@@ -86,12 +86,11 @@ class DirManagement:
                 signal, segment = str(filename).split(sep)[-2:]
                 segment = segment.split('_')[0]
                 # print(all_labels[signal][int(segment)], self.labels_dict["normal"])
-                if all_labels[signal][int(segment)] in self.labels_dict["normal"]:
-                    shutil.copy(filename, self.data_dir / dataset[0] / "normal" / f"{filename.stem}_{signal}.png")
-                elif all_labels[signal][int(segment)] in self.labels_dict["abnormal"]:
-                    shutil.copy(filename, self.data_dir / dataset[0] / "abnormal" / f"{filename.stem}_{signal}.png")
-    
-    
+                for label in self.labels_dict:
+                    if all_labels[signal][int(segment)] in self.labels_dict[label]:
+                        shutil.copy(filename, self.data_dir / dataset[0] / label / f"{filename.stem}_{signal}.png")
+                        
+                        
 @attr.s(auto_attribs=True)
 class DataPreparation:
     data_dir: Path

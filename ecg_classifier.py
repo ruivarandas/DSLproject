@@ -70,23 +70,30 @@ class ECGClassifier:
         self.model = model.to(self.device)
 
     def get_class_balance(self):
-        normal, abnormal = 0, 0
+        class_balance = {}
+        for label in self.configurations["labels"]:
+            class_balance[label] = 0
+            
         data_dir = Path(self.configurations["data_dir"]) / "raw_figures"
         for folder in data_dir.iterdir():
             for signal in folder.glob("*.txt"):
                 labels = np.loadtxt(signal.as_posix(), dtype=np.object)[1:, 1]
                 for label in labels:
-                    if label in self.configurations["labels"]['normal']:
-                        normal += 1
-                    elif label in self.configurations["labels"]['abnormal']:
-                        abnormal += 1
-        return {"normal": normal, "abnormal": abnormal}
+                    for label_aux in self.configurations["labels"]:
+                        if label in self.configurations["labels"][label_aux]:
+                            class_balance[label_aux] += 1
+        total = 0
+        weights_list = []
+        for label in sorted(list(class_balance.keys())):
+            total += class_balance[label]
+            weights_list.append(class_balance[label])
+        
+        return total/np.array(weights_list)
 
     def _loss(self):
         if self.configurations["weighted_loss"]:
             weights = self.get_class_balance()
-            total = weights["normal"] + weights["abnormal"]
-            weights = torch.FloatTensor([weights["normal"] / total, weights["abnormal"] / total]).to(self.device)
+            weights = torch.FloatTensor(weights).to(self.device)
             loss = nn.CrossEntropyLoss(weight=weights)
         else:
             loss = nn.CrossEntropyLoss()
@@ -144,7 +151,7 @@ class ECGClassifier:
         loss = self._loss()
         model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device,
                                                self.dataloaders, self.datasets_sizes, self.configurations["epochs"],
-                                               self.configurations["early_stop"])
+                                               self.configurations["early_stop"], self.configurations["multiclass"])
         self._save_model(self.model, metrics, epoch)
         for metric in metrics:
             if metric.split(" ")[0] != "best":
