@@ -5,7 +5,7 @@ import numpy as np
 from sklearn import metrics as sk_metrics
 
 
-def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs, early_stop):
+def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs, early_stop, multiclass):
     since = time.time()
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -62,8 +62,13 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
             
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = sk_metrics.accuracy_score(y_pred, y_true)
-            f1_score = sk_metrics.f1_score(y_pred, y_true)
-            precision = sk_metrics.precision_score(y_pred, y_true)
+            if multiclass:
+                f1_score = sk_metrics.f1_score(y_pred, y_true, average='weighted')
+                precision = sk_metrics.precision_score(y_pred, y_true, average='weighted')
+            else:
+                precision = sk_metrics.precision_score(y_pred, y_true)
+                f1_score = sk_metrics.f1_score(y_pred, y_true)
+            
             
             print(f'{phase} Loss: {round(epoch_loss,4)} Acc: {round(epoch_acc,4)} F1Score: {round(f1_score, 4)}')
 
