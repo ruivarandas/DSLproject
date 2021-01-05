@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import os
+import shutil
 
 
 def configure_seed(seed):
@@ -38,17 +39,29 @@ class ECGClassifier:
         with open(self.config_path) as json_file:
             data = json.load(json_file)
         return data
-
+    
+    def labels_file(self, beat):
+        raw_data_dir = Path(self.configurations["data_dir"]) / "raw_figures"
+        labels = Path(self.configurations["data_dir"]) / f"labels_{beat}"
+        print(f"Labels path: {labels}")
+        for filename in labels.iterdir():
+            shutil.copy(filename, raw_data_dir / filename.stem)
+            
     def _prepare_data(self):
+        heartbeat = self.configurations['heartbeat']
+        self.labels_file(heartbeat)
         if not self.configurations["dirs_already_prepared"]:
-            dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels"])
+            if self.configurations["multiclass"]:
+                dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_multi"], heartbeat)
+            else:
+                dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_bin"], heartbeat)
             train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
                                                         self.configurations["val_fraction"])
             dir_prep.write_data(train, val, test)
 
             data_prep = DataPreparation(dir_prep.data_dir)
         else:
-            data_prep = DataPreparation(Path(self.configurations["data_dir"]) / "figures")
+            data_prep = DataPreparation(Path(self.configurations["data_dir"]) / f"figures_{heartbeat}")
 
         self.device = data_prep.device
         self.dataloaders, self.datasets_sizes, self.class_names = data_prep.create_dataloaders(

@@ -12,7 +12,8 @@ from os import sep
 @attr.s(auto_attribs=True)
 class DirManagement:
     project_dir: str
-    labels_dict: dict 
+    labels_dict: dict
+    heartbeat: str
     
     @property
     def labels_list(self):
@@ -20,7 +21,7 @@ class DirManagement:
     
     @property
     def data_dir(self):
-        return Path(self.project_dir) / "figures"
+        return Path(self.project_dir) / f"figures_{self.heartbeat}"
     
     @property
     def raw_data_dir(self):
@@ -147,9 +148,3 @@ class DataPreparation:
         if title is not None:
             plt.title(title)
         plt.pause(0.001)  # pause a bit so that plots are updated
-
-
-if __name__ == '__main__':
-    # dirmanag = DirManagement(project_dir='./data', labels_dict={"abnormal": ["A", "a", "J", "S", "V", "E", "F", "P", "/", "f", "Q"], "normal": ["N", "L", "R", "e", "j"]})
-    # dirmanag.write_data(dirmanag.all_filenames, dirmanag.all_filenames, dirmanag.all_filenames)
-    DataPreparation(Path('./data/figures')).create_dataloaders(4,True,8)
