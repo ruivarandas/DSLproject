@@ -1,6 +1,6 @@
 from pathlib import Path
 import shutil
-from sklearn.model_selection import train_test_split, LeavePGroupsOut
+from sklearn.model_selection import train_test_split, LeavePGroupsOut, LeaveOneGroupOut
 import attr
 import torch
 from torchvision import datasets, transforms
@@ -50,6 +50,13 @@ class DirManagement:
             for txt in folder.glob("*.txt"):
                 groups.append([int(folder.parts[-1])] * len(np.loadtxt(Path(folder) / txt.name, dtype=np.object)[1:, 1]))
         return np.concatenate(groups)
+
+    @property
+    def all_labels_list(self):
+        labels = []
+        for key in self.all_labels:
+            labels.append(self.all_labels[key])
+        return np.concatenate(labels)
                 
     def create_datasets(self, test_size, val_size):
         """
@@ -58,7 +65,11 @@ class DirManagement:
         _, test_filenames = train_test_split(self.all_filenames, test_size=test_size, random_state=42, shuffle=True)
         train_filenames, val_filenames = train_test_split(_, test_size=val_size/(1-test_size), random_state=42, shuffle=True)
         return train_filenames, val_filenames, test_filenames
-    
+
+    def create_datasets_LeaveOneGroupOut(self):
+        lpgo = LeaveOneGroupOut()
+        return lpgo.split(self.all_filenames, groups=self.groups)
+
     def _create_new_dirs(self):
         """
         create new organized directories
@@ -148,3 +159,6 @@ class DataPreparation:
         if title is not None:
             plt.title(title)
         plt.pause(0.001)  # pause a bit so that plots are updated
+
+if '__main__' == __name__:
+    dirmanag = DirManagement('./data', {"abnormal": ["A", "a", "J", "S", "V", "E", "F"], "normal": ["N", "L", "R", "e", "j"]}, "mid")
