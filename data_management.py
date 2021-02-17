@@ -66,9 +66,19 @@ class DirManagement:
         train_filenames, val_filenames = train_test_split(_, test_size=val_size/(1-test_size), random_state=42, shuffle=True)
         return train_filenames, val_filenames, test_filenames
 
-    def create_datasets_LeaveOneGroupOut(self):
+    def create_datasets_LeaveOneGroupOut(self, test_size):
+        # Get 10% for the test set
+        groups = int(len(set(self.groups))*test_size)
+        lpgo = LeavePGroupsOut(n_groups=groups)
+        labels = self.all_labels_list
+        for train, test in lpgo.split(self.all_filenames, labels, groups=self.groups):
+            train_filenames, train_labels, train_groups = np.array(self.all_filenames)[train], np.array(labels)[train], \
+                                                          np.array(self.groups)[train]
+            test_filenames, test_labels, test_groups = np.array(self.all_filenames)[test], np.array(labels)[test], \
+                                                       np.array(self.groups)[test]
+            break
         lpgo = LeaveOneGroupOut()
-        return lpgo.split(self.all_filenames, groups=self.groups)
+        return (train_filenames, train_labels, train_groups), (test_filenames, test_labels, test_groups), lpgo.split(train_filenames, train_labels, groups=train_groups)
 
     def _create_new_dirs(self):
         """
@@ -139,11 +149,11 @@ class DataPreparation:
 
         return images
     
-    def create_dataloaders(self, batch_size, shuffle, num_workers):
+    def create_dataloaders(self, batch_size, shuffle, num_workers, sets=('train', 'val', 'test')):
         data_transforms = self.data_transformations()
-        image_datasets = {x: datasets.ImageFolder((self.data_dir / x).as_posix(), data_transforms[x]) for x in ['train', 'val', 'test']}
-        dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers) for x in ['train', 'val', 'test']}
-        dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
+        image_datasets = {x: datasets.ImageFolder((self.data_dir / x).as_posix(), data_transforms[x]) for x in sets}
+        dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers) for x in sets}
+        dataset_sizes = {x: len(image_datasets[x]) for x in sets}
         class_names = image_datasets['train'].classes
         return dataloaders, dataset_sizes, class_names
     

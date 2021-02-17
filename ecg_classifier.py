@@ -1,7 +1,7 @@
 import attr
 from pathlib import Path
 from data_management import DirManagement, DataPreparation
-from train import train_and_eval
+from train import train_and_eval, train_and_eval_logo
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch import nn
@@ -39,6 +39,13 @@ class ECGClassifier:
         with open(self.config_path) as json_file:
             data = json.load(json_file)
         return data
+
+    @property
+    def labels(self):
+        if self.configurations['multiclass']:
+            return 'labels_multi'
+        else:
+            return 'labels_bin'
     
     def labels_file(self, beat):
         raw_data_dir = Path(self.configurations["data_dir"]) / "raw_figures"
@@ -55,19 +62,28 @@ class ECGClassifier:
                 dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_multi"], heartbeat)
             else:
                 dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_bin"], heartbeat)
-            train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
+            if self.configurations["leave_groups_out"]:
+                train, test, self.logo = dir_prep.create_datasets_LeaveOneGroupOut(self.configurations["test_fraction"])
+                val = ''
+            else:
+                train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
                                                         self.configurations["val_fraction"])
-            dir_prep.write_data(train, val, test)
+            dir_prep.write_data(train[0], val, test[0])
 
             data_prep = DataPreparation(dir_prep.data_dir)
         else:
             data_prep = DataPreparation(Path(self.configurations["data_dir"]) / f"figures_{heartbeat}")
 
+        if self.configurations['leave_groups_out']:
+            sets = ['train', 'test']
+        else:
+            sets = ['train', 'val', 'test']
+
         self.device = data_prep.device
         self.dataloaders, self.datasets_sizes, self.class_names = data_prep.create_dataloaders(
             self.configurations["batch_size"],
             self.configurations["shuffle_data"],
-            self.configurations["number_workers"])
+            self.configurations["number_workers"], sets)
 
     def _define_model(self):
         model = None
@@ -78,13 +94,13 @@ class ECGClassifier:
                 model = models.resnet50(pretrained=False)           
             
         n_feat = model.fc.in_features
-        class_names = list(self.configurations["labels"].keys())
+        class_names = list(self.configurations[self.labels].keys())
         model.fc = nn.Linear(n_feat, len(class_names))
         self.model = model.to(self.device)
 
     def get_class_balance(self):
         class_balance = {}
-        for label in self.configurations["labels"]:
+        for label in self.configurations[self.labels]:
             class_balance[label] = 0
             
         data_dir = Path(self.configurations["data_dir"]) / "raw_figures"
@@ -92,8 +108,8 @@ class ECGClassifier:
             for signal in folder.glob("*.txt"):
                 labels = np.loadtxt(signal.as_posix(), dtype=np.object)[1:, 1]
                 for label in labels:
-                    for label_aux in self.configurations["labels"]:
-                        if label in self.configurations["labels"][label_aux]:
+                    for label_aux in self.configurations[self.labels]:
+                        if label in self.configurations[self.labels][label_aux]:
                             class_balance[label_aux] += 1
         total = 0
         weights_list = []
@@ -162,9 +178,14 @@ class ECGClassifier:
         self._define_model()
         self._define_learning()
         loss = self._loss()
-        model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device,
-                                               self.dataloaders, self.datasets_sizes, self.configurations["epochs"],
-                                               self.configurations["early_stop"], self.configurations["multiclass"])
+        if self.configurations["leave_groups_out"]:
+            model, metrics, epoch = train_and_eval_logo(self.model, loss, self.optimizer, self.exp_lr_scheduler,
+                                    self.device, self.dataloaders, self.datasets_sizes, self.configurations["epochs"],
+                                    self.configurations["early_stop"], self.configurations["multiclass"], self.logo)
+        else:
+            model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device,
+                                    self.dataloaders, self.datasets_sizes, self.configurations["epochs"],
+                                    self.configurations["early_stop"], self.configurations["multiclass"])
         self._save_model(self.model, metrics, epoch)
         for metric in metrics:
             if metric.split(" ")[0] != "best":
