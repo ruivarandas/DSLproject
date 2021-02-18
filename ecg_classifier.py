@@ -133,7 +133,7 @@ class ECGClassifier:
         #     {'params': self.model.fc.parameters(), 'lr': 1e-6}
         # ]
 
-        self.optimizer = optim.Adam(weight_decay=self.configurations["weight_decay"],
+        self.optimizer = optim.Adam(self.model.parameters(), weight_decay=self.configurations["weight_decay"],
                                     lr=self.configurations["learning_rate"])
 
         # Decay LR by a factor of 0.1 every 7 epochs
