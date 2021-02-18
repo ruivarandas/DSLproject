@@ -68,8 +68,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
             else:
                 precision = sk_metrics.precision_score(y_pred, y_true)
                 f1_score = sk_metrics.f1_score(y_pred, y_true)
-            
-            
+
             print(f'{phase} Loss: {round(epoch_loss,4)} Acc: {round(epoch_acc,4)} F1Score: {round(f1_score, 4)}')
 
             if phase == 'train':
@@ -87,7 +86,6 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
                         stop = True
 
             # deep copy the model
-            # CHECK BELLOW
             if phase == 'val' and epoch_acc > best_acc and f1_score > best_f1score:
                 best_acc = epoch_acc
                 best_f1score = f1_score
@@ -121,26 +119,6 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
 
 
 def train_and_eval_logo(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs, early_stop, multiclass, logo, n_splits=0):
-    since = time.time()
-    best_model_wts = copy.deepcopy(model.state_dict())
-    best_acc = 0.0
-    best_f1score = 0.0
-    best_prec = 0.0
-
-    losses = []
-    accs = []
-    f1_scores, precision_scores = [], []
-    stop = False
-
-    val_losses, val_f1_scores = [], []
-    current_epoch = num_epochs
-    
-    for fold, (train_index, val_index) in enumerate(logo):
-        print(f'Patient {fold}/{ n_splits - 1}')
-    
-    return model, metrics, current_epoch
-
-def _train_and_eval_logo(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs, early_stop, multiclass, logo, n_splits=0):
     since = time.time()
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
