@@ -120,7 +120,7 @@ def train_and_eval(model, criterion, optimizer, scheduler, device, dataloaders, 
     return model, metrics, current_epoch
 
 
-def train_and_eval_logo(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs, early_stop, multiclass, logo):
+def train_and_eval_logo(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs, early_stop, multiclass, logo, n_splits=0):
     since = time.time()
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -134,7 +134,9 @@ def train_and_eval_logo(model, criterion, optimizer, scheduler, device, dataload
 
     val_losses, val_f1_scores = [], []
     current_epoch = num_epochs
-    for train_index, val_index in logo:
+    
+    for fold, (train_index, val_index) in enumerate(logo):
+        print(f'Patient {fold}/{ n_splits - 1}')
         for epoch in range(num_epochs):
             print(f'Epoch {epoch}/{ num_epochs - 1}')
             print('-' * 10)
@@ -177,6 +179,10 @@ def train_and_eval_logo(model, criterion, optimizer, scheduler, device, dataload
             y_true = np.concatenate(y_true)
 
             epoch_loss = running_loss / dataset_sizes[phase]
+            
+            if epoch_loss == 0:
+                break
+            
             epoch_acc = sk_metrics.accuracy_score(y_pred, y_true)
             if multiclass:
                 f1_score = sk_metrics.f1_score(y_pred, y_true, average='weighted')

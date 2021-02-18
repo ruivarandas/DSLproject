@@ -63,7 +63,7 @@ class ECGClassifier:
             else:
                 dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_bin"], heartbeat)
             if self.configurations["leave_groups_out"]:
-                train, test, self.logo = dir_prep.create_datasets_LeaveOneGroupOut(self.configurations["test_fraction"])
+                train, test, self.logo, self.n_splits = dir_prep.create_datasets_LeaveOneGroupOut(self.configurations["test_fraction"])
                 val = ''
             else:
                 train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
@@ -87,12 +87,7 @@ class ECGClassifier:
 
     def _define_model(self):
         model = None
-        if self.configurations["model_name"] == "resnet50":
-            if self.configurations["pretrained"]:
-                model = models.resnet50(pretrained=True)
-            else:
-                model = models.resnet50(pretrained=False)           
-            
+        model = models.resnet50(pretrained=self.configurations["pretrained"])             
         n_feat = model.fc.in_features
         class_names = list(self.configurations[self.labels].keys())
         model.fc = nn.Linear(n_feat, len(class_names))
@@ -136,11 +131,11 @@ class ECGClassifier:
         if self.configurations["diff_learn"]:
             
             parameters = [
-                {'params': self.model.layer1.parameters(), 'lr': 1e-4},
-                {'params': self.model.layer2.parameters(), 'lr': 1e-4},
-                {'params': self.model.layer3.parameters(), 'lr': 1e-4},
-                {'params': self.model.layer4.parameters(), 'lr': 1e-4},
-                {'params': self.model.fc.parameters(), 'lr': 1e-4}
+                {'params': self.model.layer1.parameters(), 'lr': 1e-6},
+                {'params': self.model.layer2.parameters(), 'lr': 1e-6},
+                {'params': self.model.layer3.parameters(), 'lr': 1e-6},
+                {'params': self.model.layer4.parameters(), 'lr': 1e-6},
+                {'params': self.model.fc.parameters(), 'lr': 1e-6}
             ]
 
         self.optimizer = optim.Adam(parameters,
@@ -181,7 +176,7 @@ class ECGClassifier:
         if self.configurations["leave_groups_out"]:
             model, metrics, epoch = train_and_eval_logo(self.model, loss, self.optimizer, self.exp_lr_scheduler,
                                     self.device, self.dataloaders, self.datasets_sizes, self.configurations["epochs"],
-                                    self.configurations["early_stop"], self.configurations["multiclass"], self.logo)
+                                    self.configurations["early_stop"], self.configurations["multiclass"], self.logo, self.n_splits)
         else:
             model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device,
                                     self.dataloaders, self.datasets_sizes, self.configurations["epochs"],

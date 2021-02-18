@@ -77,8 +77,9 @@ class DirManagement:
             test_filenames, test_labels, test_groups = np.array(self.all_filenames)[test], np.array(labels)[test], \
                                                        np.array(self.groups)[test]
             break
-        lpgo = LeaveOneGroupOut()
-        return (train_filenames, train_labels, train_groups), (test_filenames, test_labels, test_groups), lpgo.split(train_filenames, train_labels, groups=train_groups)
+        lpgo = LeavePGroupsOut(n_groups=4)
+        lpgo_split = lpgo.split(train_filenames, train_labels, groups=train_groups)
+        return (train_filenames, train_labels, train_groups), (test_filenames, test_labels, test_groups), lpgo_split, len(list(lpgo_split)) # lpgo.get_n_splits(groups=train_groups)
 
     def _create_new_dirs(self):
         """
