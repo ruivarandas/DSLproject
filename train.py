@@ -137,6 +137,26 @@ def train_and_eval_logo(model, criterion, optimizer, scheduler, device, dataload
     
     for fold, (train_index, val_index) in enumerate(logo):
         print(f'Patient {fold}/{ n_splits - 1}')
+    
+    return model, metrics, current_epoch
+
+def _train_and_eval_logo(model, criterion, optimizer, scheduler, device, dataloaders, dataset_sizes, num_epochs, early_stop, multiclass, logo, n_splits=0):
+    since = time.time()
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_acc = 0.0
+    best_f1score = 0.0
+    best_prec = 0.0
+
+    losses = []
+    accs = []
+    f1_scores, precision_scores = [], []
+    stop = False
+
+    val_losses, val_f1_scores = [], []
+    current_epoch = num_epochs
+    
+    for fold, (train_index, val_index) in enumerate(logo):
+        print(f'Patient {fold}/{ n_splits - 1}')
         for epoch in range(num_epochs):
             print(f'Epoch {epoch}/{ num_epochs - 1}')
             print('-' * 10)

@@ -7,6 +7,7 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import numpy as np
 from os import sep
+from random import random
 
 
 @attr.s(auto_attribs=True)
@@ -66,20 +67,22 @@ class DirManagement:
         train_filenames, val_filenames = train_test_split(_, test_size=val_size/(1-test_size), random_state=42, shuffle=True)
         return train_filenames, val_filenames, test_filenames
 
-    def create_datasets_LeaveOneGroupOut(self, test_size):
+    def create_datasets_LeaveOneGroupOut(self, test_size, val_size):
         # Get 10% for the test set
         groups = int(len(set(self.groups))*test_size)
         lpgo = LeavePGroupsOut(n_groups=groups)
         labels = self.all_labels_list
-        for train, test in lpgo.split(self.all_filenames, labels, groups=self.groups):
+        for i, (train, test) in enumerate(lpgo.split(self.all_filenames, labels, groups=self.groups)):
             train_filenames, train_labels, train_groups = np.array(self.all_filenames)[train], np.array(labels)[train], \
                                                           np.array(self.groups)[train]
             test_filenames, test_labels, test_groups = np.array(self.all_filenames)[test], np.array(labels)[test], \
                                                        np.array(self.groups)[test]
-            break
-        lpgo = LeavePGroupsOut(n_groups=4)
-        lpgo_split = lpgo.split(train_filenames, train_labels, groups=train_groups)
-        return (train_filenames, train_labels, train_groups), (test_filenames, test_labels, test_groups), lpgo_split, len(list(lpgo_split)) # lpgo.get_n_splits(groups=train_groups)
+            if random() > 0.95:
+                break        
+        
+        train_filenames, val_filenames = train_test_split(train_filenames, test_size=val_size/(1-test_size), random_state=42, shuffle=True)
+        
+        return train_filenames, val_filenames, test_filenames
 
     def _create_new_dirs(self):
         """

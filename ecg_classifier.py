@@ -63,8 +63,7 @@ class ECGClassifier:
             else:
                 dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_bin"], heartbeat)
             if self.configurations["leave_groups_out"]:
-                train, test, self.logo, self.n_splits = dir_prep.create_datasets_LeaveOneGroupOut(self.configurations["test_fraction"])
-                val = ''
+                train, val, test = dir_prep.create_datasets_LeaveOneGroupOut(self.configurations["test_fraction"], self.configurations["val_fraction"])
             else:
                 train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
                                                         self.configurations["val_fraction"])
@@ -74,10 +73,7 @@ class ECGClassifier:
         else:
             data_prep = DataPreparation(Path(self.configurations["data_dir"]) / f"figures_{heartbeat}")
 
-        if self.configurations['leave_groups_out']:
-            sets = ['train', 'test']
-        else:
-            sets = ['train', 'val', 'test']
+        sets = ['train', 'val', 'test']
 
         self.device = data_prep.device
         self.dataloaders, self.datasets_sizes, self.class_names = data_prep.create_dataloaders(
@@ -173,12 +169,7 @@ class ECGClassifier:
         self._define_model()
         self._define_learning()
         loss = self._loss()
-        if self.configurations["leave_groups_out"]:
-            model, metrics, epoch = train_and_eval_logo(self.model, loss, self.optimizer, self.exp_lr_scheduler,
-                                    self.device, self.dataloaders, self.datasets_sizes, self.configurations["epochs"],
-                                    self.configurations["early_stop"], self.configurations["multiclass"], self.logo, self.n_splits)
-        else:
-            model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device,
+        model, metrics, epoch = train_and_eval(self.model, loss, self.optimizer, self.exp_lr_scheduler, self.device,
                                     self.dataloaders, self.datasets_sizes, self.configurations["epochs"],
                                     self.configurations["early_stop"], self.configurations["multiclass"])
         self._save_model(self.model, metrics, epoch)
