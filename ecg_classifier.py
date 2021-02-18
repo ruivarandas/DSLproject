@@ -124,18 +124,16 @@ class ECGClassifier:
         Add differential learning rate
         :return:
         """
-        if self.configurations["diff_learn"]:
             
-            parameters = [
-                {'params': self.model.layer1.parameters(), 'lr': 1e-6},
-                {'params': self.model.layer2.parameters(), 'lr': 1e-6},
-                {'params': self.model.layer3.parameters(), 'lr': 1e-6},
-                {'params': self.model.layer4.parameters(), 'lr': 1e-6},
-                {'params': self.model.fc.parameters(), 'lr': 1e-6}
-            ]
+        # parameters = [
+        #     {'params': self.model.layer1.parameters(), 'lr': 1e-6},
+        #     {'params': self.model.layer2.parameters(), 'lr': 1e-6},
+        #     {'params': self.model.layer3.parameters(), 'lr': 1e-6},
+        #     {'params': self.model.layer4.parameters(), 'lr': 1e-6},
+        #     {'params': self.model.fc.parameters(), 'lr': 1e-6}
+        # ]
 
-        self.optimizer = optim.Adam(parameters,
-                                    weight_decay=self.configurations["weight_decay"],
+        self.optimizer = optim.Adam(weight_decay=self.configurations["weight_decay"],
                                     lr=self.configurations["learning_rate"])
 
         # Decay LR by a factor of 0.1 every 7 epochs
