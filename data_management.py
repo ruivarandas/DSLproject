@@ -72,13 +72,21 @@ class DirManagement:
         groups = int(len(set(self.groups))*test_size)
         lpgo = LeavePGroupsOut(n_groups=groups)
         labels = self.all_labels_list
+        flag = False
         for i, (train, test) in enumerate(lpgo.split(self.all_filenames, labels, groups=self.groups)):
+            if random() > 0.95:
+                flag = True
+                train_filenames, train_labels, train_groups = np.array(self.all_filenames)[train], np.array(labels)[train], \
+                                                          np.array(self.groups)[train]
+                test_filenames, test_labels, test_groups = np.array(self.all_filenames)[test], np.array(labels)[test], \
+                                                       np.array(self.groups)[test]
+                break
+                
+        if not flag:
             train_filenames, train_labels, train_groups = np.array(self.all_filenames)[train], np.array(labels)[train], \
                                                           np.array(self.groups)[train]
             test_filenames, test_labels, test_groups = np.array(self.all_filenames)[test], np.array(labels)[test], \
                                                        np.array(self.groups)[test]
-            if random() > 0.95:
-                break        
         
         train_filenames, val_filenames = train_test_split(train_filenames, test_size=val_size/(1-test_size), random_state=42, shuffle=True)
         

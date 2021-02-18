@@ -67,7 +67,7 @@ class ECGClassifier:
             else:
                 train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
                                                         self.configurations["val_fraction"])
-            dir_prep.write_data(train[0], val, test[0])
+            dir_prep.write_data(train, val, test)
 
             data_prep = DataPreparation(dir_prep.data_dir)
         else:

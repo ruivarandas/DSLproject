@@ -59,7 +59,7 @@
   "number_workers": 4,
   "shuffle_data": true,
   "batch_size": 16,
-  "epochs": 12,
+  "epochs": 20,
   "weighted_loss": true,
   "early_stop": true,
   "pretrained": false,
