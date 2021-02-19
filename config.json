@@ -1,1 +1,73 @@
-{"data_dir": "./data", "dirs_already_prepared": false, "heartbeat": "final", "labels_bin": {"abnormal": ["A", "a", "J", "S", "V", "E", "F", "P", "/", "f", "Q"], "normal": ["N", "L", "R", "e", "j"]}, "labels_multi": {"SVEB": ["A", "a", "J", "S"], "VEB": ["V", "E"], "F": ["F"], "Q": ["P", "/", "f", "Q"], "N": ["N", "L", "R", "e", "j"]}, "test_fraction": 0.1, "val_fraction": 0.1, "multiclass": false, "model_name": "resnet50", "number_workers": 4, "shuffle_data": true, "batch_size": 16, "epochs": 10, "weighted_loss": true, "early_stop": true, "pretrained": true, "optimizer": "SGD", "learning_rate": 1e-06, "weight_decay": 0.1, "decay_step": 4, "lr_scheduler_gamma": 0.1, "last_trained_model": "/home/bernardo/phD/DSLproject/models/resnet50_d_18_t_23_53.pth", "leave_groups_out": true}
+{
+  "data_dir": "./data",
+  "dirs_already_prepared": false,
+  "heartbeat": "initial",
+  "labels_bin": {
+    "abnormal": [
+      "A",
+      "a",
+      "J",
+      "S",
+      "V",
+      "E",
+      "F",
+      "P",
+      "/",
+      "f",
+      "Q"
+    ],
+    "normal": [
+      "N",
+      "L",
+      "R",
+      "e",
+      "j"
+    ]
+  },
+  "labels_multi": {
+    "SVEB": [
+      "A",
+      "a",
+      "J",
+      "S"
+    ],
+    "VEB": [
+      "V",
+      "E"
+    ],
+    "F": [
+      "F"
+    ],
+    "Q": [
+      "P",
+      "/",
+      "f",
+      "Q"
+    ],
+    "N": [
+      "N",
+      "L",
+      "R",
+      "e",
+      "j"
+    ]
+  },
+  "test_fraction": 0.1,
+  "val_fraction": 0.1,
+  "multiclass": false,
+  "model_name": "resnet50",
+  "number_workers": 4,
+  "shuffle_data": true,
+  "batch_size": 16,
+  "epochs": 10,
+  "weighted_loss": true,
+  "early_stop": true,
+  "pretrained": true,
+  "optimizer": "SGD",
+  "learning_rate": 1e-06,
+  "weight_decay": 0.1,
+  "decay_step": 4,
+  "lr_scheduler_gamma": 0.1,
+  "last_trained_model": "/home/bernardo/phD/DSLproject/models/resnet50_d_18_t_23_53.pth",
+  "leave_groups_out": true
+}

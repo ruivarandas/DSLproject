@@ -82,7 +82,6 @@ class ECGClassifier:
             self.configurations["number_workers"], sets)
 
     def _define_model(self):
-        model = None
         model = models.resnet50(pretrained=self.configurations["pretrained"])             
         n_feat = model.fc.in_features
         class_names = list(self.configurations[self.labels].keys())
@@ -143,7 +142,7 @@ class ECGClassifier:
 
     def _save_model(self, model, metrics, epoch):
         now = datetime.now()
-        path = Path.cwd() / "models"
+        path = Path.cwd() / f"models/label_{self.configurations['heartbeat']}"
         name = f"{self.configurations['model_name']}_{now.strftime('d_%d_t_%H_%M')}"
         trained_model_filepath = path / f"{name}.pth"
         model_config_filepath = path / f"{name}.json"
@@ -181,7 +180,7 @@ class ECGClassifier:
         plt.xlabel('Epoch')
         plt.ylabel(ylabel)
         plt.plot(plottable)
-        plt.savefig(f'plots/{name}_{now.strftime("d_%d_t_%H_%M")}.pdf', bbox_inches='tight')
+        plt.savefig(f'plots/label_{self.configurations["heartbeat"]}/{name}_{now.strftime("d_%d_t_%H_%M")}.pdf', bbox_inches='tight')
 
 
 if __name__ == '__main__':
