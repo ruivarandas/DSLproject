@@ -1,7 +1,7 @@
 {
   "data_dir": "./data",
   "dirs_already_prepared": false,
-  "heartbeat": "initial",
+  "heartbeat": "mid",
   "labels_bin": {
     "abnormal": [
       "A",

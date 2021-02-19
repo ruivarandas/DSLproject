@@ -1,12 +1,12 @@
 from read_data_210 import *
 
 if __name__ == "__main__":
-    folder = r'.\mit-bih-arrhythmia-database-1.0.0'
+    folder = r'./data/mit-bih-arrhythmia-database-1.0.0'
     parser = argparse.ArgumentParser()
     parser.add_argument("-i")
     parser.add_argument("-f")
     args = parser.parse_args()
-    index = 5
+    index = 0
     for file in range(int(args.i), int(args.f)):
         if file not in [110, 120, 204, 206, 211, 216, 218, 224, 225, 226, 227, 229]:
             print(file)
@@ -18,8 +18,12 @@ if __name__ == "__main__":
             new_folder = join(r'.\data\raw_figures', str(file))
             if not exists(new_folder):
                 makedirs(new_folder)
-            with open(join('./labels', str(file)+'.txt'), 'w') as f:
+            with open(join('./data/labels_mid', str(file)+'.txt'), 'w') as f:
                 f.write("Sample\tLabel\n")
-            for i, segment in enumerate(labels[index:]):
-                with open(join('./labels', str(file) + '.txt'), 'a') as f:
-                    f.write(str(i) + '\t' + labels[i+index] + '\n')
+            with open(join('./data/labels_mid', str(file) + '.txt'), 'a') as f:
+                if index < 5:
+                    for i, segment in enumerate(labels[index:-5+index]):
+                        f.write(str(i) + '\t' + labels[i+index] + '\n')
+                else:
+                    for i, segment in enumerate(labels[index:]):
+                        f.write(str(i) + '\t' + labels[i+index] + '\n')

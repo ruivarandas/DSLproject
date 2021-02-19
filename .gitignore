@@ -130,7 +130,9 @@ dmypy.json
 
 .mit-bih-arrhythmia-database-1.0.0
 mit-bih-arrhythmia-database-1.0.0/
-data/
+data/raw_figures
+data/mit-bih-arrhythmia-database-1.0.0
+data/figures_*
 saliency_maps
 Figures
 /Figures.zip

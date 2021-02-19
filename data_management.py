@@ -58,38 +58,29 @@ class DirManagement:
         for key in self.all_labels:
             labels.append(self.all_labels[key])
         return np.concatenate(labels)
-                
-    def create_datasets(self, test_size, val_size):
-        """
-        split all filenames in train, validation and test datasets
-        """
-        _, test_filenames = train_test_split(self.all_filenames, test_size=test_size, random_state=42, shuffle=True)
-        train_filenames, val_filenames = train_test_split(_, test_size=val_size/(1-test_size), random_state=42, shuffle=True)
-        return train_filenames, val_filenames, test_filenames
+
+    @staticmethod
+    def split_groups(filenames, labels, groups, size):
+        lpgo = LeavePGroupsOut(n_groups=size)
+        flag = False
+        for i, (train, test) in enumerate(lpgo.split(filenames, labels, groups=groups)):
+            if random() > 0.95:
+                flag = True
+                train_filenames, train_labels, train_groups = np.array(filenames)[train], np.array(labels)[train], np.array(groups)[train]
+                test_filenames, test_labels, test_groups = np.array(filenames)[test], np.array(labels)[test],np.array(groups)[test]
+                break
+        if not flag:
+            train_filenames, train_labels, train_groups = np.array(filenames)[train], np.array(labels)[train], np.array(groups)[train]
+            test_filenames, test_labels, test_groups = np.array(filenames)[test], np.array(labels)[test], np.array(groups)[test]
+
+        return train_filenames, test_filenames, train_groups, train_labels
 
     def create_datasets_LeaveOneGroupOut(self, test_size, val_size):
         # Get 10% for the test set
-        groups = int(len(set(self.groups))*test_size)
-        lpgo = LeavePGroupsOut(n_groups=groups)
-        labels = self.all_labels_list
-        flag = False
-        for i, (train, test) in enumerate(lpgo.split(self.all_filenames, labels, groups=self.groups)):
-            if random() > 0.95:
-                flag = True
-                train_filenames, train_labels, train_groups = np.array(self.all_filenames)[train], np.array(labels)[train], \
-                                                          np.array(self.groups)[train]
-                test_filenames, test_labels, test_groups = np.array(self.all_filenames)[test], np.array(labels)[test], \
-                                                       np.array(self.groups)[test]
-                break
-                
-        if not flag:
-            train_filenames, train_labels, train_groups = np.array(self.all_filenames)[train], np.array(labels)[train], \
-                                                          np.array(self.groups)[train]
-            test_filenames, test_labels, test_groups = np.array(self.all_filenames)[test], np.array(labels)[test], \
-                                                       np.array(self.groups)[test]
-        
-        train_filenames, val_filenames = train_test_split(train_filenames, test_size=val_size/(1-test_size), random_state=42, shuffle=True)
-        
+        n_test_groups = int(len(set(self.groups))*test_size)
+        train, test_filenames, train_groups, train_labels = self.split_groups(self.all_filenames, self.all_labels_list, self.groups, n_test_groups)
+        n_val_groups = int(len(set(train_groups))*(val_size/(1-test_size)))
+        train_filenames, val_filenames, _, _ = self.split_groups(train, train_labels, train_groups, n_val_groups)
         return train_filenames, val_filenames, test_filenames
 
     def _create_new_dirs(self):
@@ -181,6 +172,9 @@ class DataPreparation:
         if title is not None:
             plt.title(title)
         plt.pause(0.001)  # pause a bit so that plots are updated
+
+if '__main__' == __name__:
+    dirmanag = DirManagement('./data', {"abnormal": ["A", "a", "J", "S", "V", "E", "F"], "normal": ["N", "L", "R", "e", "j"]}, "mid")
 
 if '__main__' == __name__:
     dirmanag = DirManagement('./data', {"abnormal": ["A", "a", "J", "S", "V", "E", "F"], "normal": ["N", "L", "R", "e", "j"]}, "mid")
