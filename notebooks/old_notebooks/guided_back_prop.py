@@ -18,7 +18,7 @@ import cv2
 
 @attr.s(auto_attribs=True)
 class DataPreparation:
-    data_dir: Path
+    data_dir: str
     device: str = attr.ib(default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), init=False)
 
     @staticmethod
@@ -141,11 +141,7 @@ def guided_backprop(data, variant):
 
             label = classes[labels[index]]
 
-            ### CHANGE NAME!!!!!!!
-            if variant == "multiclass":
-                plt.savefig(f"../GB_Grad_CAM_maps/MULTI_label_final_beat/{label}/{i}_{index}.png")
-            else:
-                plt.savefig(f"../GB_Grad_CAM_maps/label_{variant}_beat/{label}/{i}_{index}.png")
+            plt.savefig(f"../GB_Grad_CAM_maps/label_{variant}_beat/{label}/{i}_{index}.png")
             plt.close()
 
         i += 1
@@ -159,5 +155,5 @@ for i, variant in enumerate(variants):
     data, size = data_prep.create_dataloaders(16, False, 4)
     model_path = Path().cwd().parents[0] / f"models/{models[i]}.pth"
     model = torch.load(model_path).cpu()
-    model.eval();
+    model.eval()
     guided_backprop(data, variant)
