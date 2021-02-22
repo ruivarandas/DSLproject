@@ -6,6 +6,7 @@ import torch
 from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import numpy as np
+import json
 from os import sep
 from random import random
 
@@ -15,6 +16,7 @@ class DirManagement:
     project_dir: str
     labels_dict: dict
     heartbeat: str
+    config: dict
     
     @property
     def labels_list(self):
@@ -82,6 +84,20 @@ class DirManagement:
         n_val_groups = int(len(set(train_groups))*(val_size/(1-test_size)))
         train_filenames, val_filenames, _, _ = self.split_groups(train, train_labels, train_groups, n_val_groups)
         return train_filenames, val_filenames, test_filenames
+
+    def create_datasets_paper_division(self):
+        train_filenames, val_filenames, test_filenames = [], [], []
+        for folder in self.raw_data_dir.iterdir():
+            try:
+                if int(folder.stem) in self.config["test_patients"]:
+                    test_filenames.append(list(folder.glob("*.png")))
+                elif int(folder.stem) in self.config["train_patients"]:
+                    train_filenames.append(list(folder.glob("*.png")))
+                elif int(folder.stem) in self.config["val_patients"]:
+                    val_filenames.append(list(folder.glob("*.png")))
+            except ValueError:
+                pass
+        return np.concatenate(train_filenames), np.concatenate(val_filenames), np.concatenate(test_filenames)
 
     def _create_new_dirs(self):
         """
@@ -174,7 +190,10 @@ class DataPreparation:
         plt.pause(0.001)  # pause a bit so that plots are updated
 
 if '__main__' == __name__:
-    dirmanag = DirManagement('./data', {"abnormal": ["A", "a", "J", "S", "V", "E", "F"], "normal": ["N", "L", "R", "e", "j"]}, "mid")
-
-if '__main__' == __name__:
-    dirmanag = DirManagement('./data', {"abnormal": ["A", "a", "J", "S", "V", "E", "F"], "normal": ["N", "L", "R", "e", "j"]}, "mid")
+    with open("config.json") as json_file:
+            data = json.load(json_file)
+            json_file.close()
+    dirmanag = DirManagement('/home/bernardo/Documents', {"abnormal": ["A", "a", "J", "S", "V", "E", "F"],
+                                             "normal": ["N", "L", "R", "e", "j"]}, "mid", data)
+    train, val, test = dirmanag.create_datasets_paper_division()
+    dirmanag.write_data(train, val, test)

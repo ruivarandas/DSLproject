@@ -26,6 +26,7 @@ def configure_seed(seed):
 @attr.s(auto_attribs=True)
 class ECGClassifier:
     configurations: dict
+    config_path: str
     device: str = attr.ib(default="cuda", init=False)
     model: torchvision.models = attr.ib(default=None, init=False)
     optimizer: torch.optim = attr.ib(default=None, init=False)
@@ -53,14 +54,16 @@ class ECGClassifier:
         self.labels_file(heartbeat)
         if not self.configurations["dirs_already_prepared"]:
             if self.configurations["multiclass"]:
-                dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_multi"], heartbeat)
+                dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_multi"], heartbeat, self.configurations)
             else:
-                dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_bin"], heartbeat)
-            if self.configurations["leave_groups_out"]:
-                train, val, test = dir_prep.create_datasets_LeaveOneGroupOut(self.configurations["test_fraction"], self.configurations["val_fraction"])
-            else:
-                train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
-                                                        self.configurations["val_fraction"])
+                dir_prep = DirManagement(Path(self.configurations["data_dir"]), self.configurations["labels_bin"], heartbeat, self.configurations)
+            # if self.configurations["leave_groups_out"]:
+            #     train, val, test = dir_prep.create_datasets_LeaveOneGroupOut(self.configurations["test_fraction"], self.configurations["val_fraction"])
+            # else:
+            #     train, val, test = dir_prep.create_datasets(self.configurations["test_fraction"],
+            #                                             self.configurations["val_fraction"])
+
+            train, val, test = dir_prep.create_datasets_paper_division()
             dir_prep.write_data(train, val, test)
 
             data_prep = DataPreparation(dir_prep.data_dir)
@@ -150,7 +153,7 @@ class ECGClassifier:
         data["last_trained_model"] = trained_model_filepath.as_posix()
         data["epochs"] = epoch
 
-        with open("config.json", 'w') as outfile:
+        with open(self.config_path, 'w') as outfile:
             json.dump(data, outfile)
         data["metrics"] = metrics
         with open(model_config_filepath, 'w') as new_file:
@@ -184,5 +187,5 @@ if __name__ == '__main__':
     with open("config.json") as json_file:
             data = json.load(json_file)
             json_file.close()
-    model_init = ECGClassifier(data)
+    model_init = ECGClassifier(data, "config.json")
     model_init.train_and_eval()
