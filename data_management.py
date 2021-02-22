@@ -135,7 +135,7 @@ class DirManagement:
 @attr.s(auto_attribs=True)
 class DataPreparation:
     data_dir: Path
-    device: str = attr.ib(default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), init=False)
+    device: str = attr.ib(default=torch.device("cuda:1" if torch.cuda.is_available() else "cpu"), init=False)
 
     @staticmethod
     def data_transformations():
