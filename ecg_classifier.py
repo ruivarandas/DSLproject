@@ -25,7 +25,7 @@ def configure_seed(seed):
 
 @attr.s(auto_attribs=True)
 class ECGClassifier:
-    config_path: str
+    configurations: dict
     device: str = attr.ib(default="cuda", init=False)
     model: torchvision.models = attr.ib(default=None, init=False)
     optimizer: torch.optim = attr.ib(default=None, init=False)
@@ -33,12 +33,6 @@ class ECGClassifier:
     dataloaders: dict = attr.ib(default=None, init=False)
     datasets_sizes: dict = attr.ib(default=None, init=False)
     class_names: list = attr.ib(default=None, init=False)
-
-    @property
-    def configurations(self):
-        with open(self.config_path) as json_file:
-            data = json.load(json_file)
-        return data
 
     @property
     def labels(self):
@@ -126,7 +120,7 @@ class ECGClassifier:
         if self.configurations["diff_learn"]:
             parameters = [
                 {'params': self.model.layer1.parameters(), 'lr': 1e-6},
-                {'params': self.model.layer2.parameters(), 'lr': 1e-5},
+                {'params': self.model.layer2.parameters(), 'lr': 1e-6},
                 {'params': self.model.layer3.parameters(), 'lr': 1e-5},
                 {'params': self.model.layer4.parameters(), 'lr': 1e-4},
                 {'params': self.model.fc.parameters(), 'lr': 1e-4}
@@ -156,7 +150,7 @@ class ECGClassifier:
         data["last_trained_model"] = trained_model_filepath.as_posix()
         data["epochs"] = epoch
 
-        with open(self.config_path, 'w') as outfile:
+        with open("config.json", 'w') as outfile:
             json.dump(data, outfile)
         data["metrics"] = metrics
         with open(model_config_filepath, 'w') as new_file:
@@ -187,5 +181,8 @@ class ECGClassifier:
 
 if __name__ == '__main__':
     configure_seed(42)
-    model_init = ECGClassifier("config.json")
+    with open("config.json") as json_file:
+            data = json.load(json_file)
+            json_file.close()
+    model_init = ECGClassifier(data)
     model_init.train_and_eval()
