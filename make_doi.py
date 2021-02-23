@@ -4,6 +4,7 @@ from read_data_210 import read_mit_database, generate_time, _ax_plot, normalize,
 import matplotlib.pylab as plt
 import json
 
+
 def segment_ecg(signal, timestamps, num_cycles=5, heartbeat=5):
     timestamps = timestamps[1:]
     segments, limits = [], []
@@ -72,12 +73,20 @@ def get_binary_label(la, labels_bin_list):
     else:
         return 'normal'
 
+
+def convert_to_binary(labels, bin_list):
+    new_labels = []
+    for label in labels:
+        new_labels.append(get_binary_label(label, bin_list))
+    return new_labels
+
+
 if __name__ == "__main__":
-    folder = r'./data/mit-bih-arrhythmia-database-1.0.0'
+    folder = r'./mit-bih-arrhythmia-database-1.0.0'
     parser = argparse.ArgumentParser()
     parser.add_argument("-beat")
     args = parser.parse_args()
-
+    beat = int(args.beat)
     binary_labels = config_labels()
 
     folders = []
@@ -87,16 +96,19 @@ if __name__ == "__main__":
         except ValueError:
             pass
 
-    with open(os.path.join(f"./ROI/{args.beat}_ROI.txt"), 'w') as f:
-        f.write("Patient\tFile\tbottom\ttop\tleft\tright\n")
+    with open(os.path.join(f"./ROI/{beat}_ROI.txt"), 'w') as f:
+        f.write("Patient\tFile\tbottom\ttop\tleft\tright\tlabel\n")
         for file in folders:
             print(file)
             signal, annotations = read_mit_database(folder, file)
             annotations.standardize_custom_labels()
-            labels = annotations.symbol
+            if beat != 5:
+                labels = convert_to_binary(annotations.symbol[beat+1:-5+beat], config_labels())
+            else:
+                labels = convert_to_binary(annotations.symbol[beat+1:], config_labels())
             R_peaks = annotations.sample
             fs = annotations.fs
-            segmented_ecg, limits = segment_ecg(signal[:, 0], R_peaks, 5, int(args.beat))
+            segmented_ecg, limits = segment_ecg(signal[:, 0], R_peaks, 5, beat)
             print(len(segmented_ecg))
             print(len(labels))
             for i, segment in enumerate(segmented_ecg):
@@ -110,5 +122,5 @@ if __name__ == "__main__":
 
                 left, bottom = convert_values_to_pixels(left, bottom)
                 right, top = convert_values_to_pixels(right, top)
-                f.write(f"{file}\t{i}_0\t{bottom}\t{top}\t{left}\t{right}\t{label}\n")
+                f.write(f"{file}\t{i}_0\t{bottom}\t{top}\t{left}\t{right}\t{labels[i]}\n")
             print()
