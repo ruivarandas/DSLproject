@@ -82,7 +82,7 @@ def convert_to_binary(labels, bin_list):
 
 
 if __name__ == "__main__":
-    folder = r'./mit-bih-arrhythmia-database-1.0.0'
+    folder = r'./data/mit-bih-arrhythmia-database-1.0.0'
     parser = argparse.ArgumentParser()
     parser.add_argument("-beat")
     args = parser.parse_args()
