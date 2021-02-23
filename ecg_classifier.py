@@ -27,7 +27,7 @@ def configure_seed(seed):
 class ECGClassifier:
     configurations: dict
     config_path: str
-    device: str = attr.ib(default="cuda", init=False)
+    device: str = attr.ib(default='cuda:1', init=False)
     model: torchvision.models = attr.ib(default=None, init=False)
     optimizer: torch.optim = attr.ib(default=None, init=False)
     exp_lr_scheduler: torch.optim.lr_scheduler = attr.ib(default=None, init=False)
