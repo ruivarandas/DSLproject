@@ -2,7 +2,7 @@ import os
 import numpy as np
 from read_data_210 import read_mit_database, generate_time, _ax_plot, normalize, argparse
 import matplotlib.pylab as plt
-
+import json
 
 def segment_ecg(signal, timestamps, num_cycles=5, heartbeat=5):
     timestamps = timestamps[1:]
@@ -51,7 +51,7 @@ def segment_ecg(signal, timestamps, num_cycles=5, heartbeat=5):
 
 def convert_values_to_pixels(x, y):
     """
-    I made calibrtion lines in Excel based on the limits of the plot and the corresponding pixel positions
+    I made calibration lines in Excel based on the limits of the plot and the corresponding pixel positions
     :param x: int or float
     :param y: int or float
     :return:
@@ -59,11 +59,26 @@ def convert_values_to_pixels(x, y):
     return int(np.round(232.5*x + 375, 0)), int(np.round(-96.389*y + 227.5))
 
 
+def config_labels():
+    with open("config.json") as j:
+        config = json.load(j)
+        j.close()
+    return config["labels_bin"]
+
+
+def get_binary_label(la, labels_bin_list):
+    if la in labels_bin_list['abnormal']:
+        return 'abnormal'
+    else:
+        return 'normal'
+
 if __name__ == "__main__":
-    folder = r'.\mit-bih-arrhythmia-database-1.0.0'
+    folder = r'./data/mit-bih-arrhythmia-database-1.0.0'
     parser = argparse.ArgumentParser()
     parser.add_argument("-beat")
     args = parser.parse_args()
+
+    binary_labels = config_labels()
 
     folders = []
     for file in set([file.split('.')[0] for file in os.listdir(folder)]):
@@ -82,7 +97,8 @@ if __name__ == "__main__":
             R_peaks = annotations.sample
             fs = annotations.fs
             segmented_ecg, limits = segment_ecg(signal[:, 0], R_peaks, 5, int(args.beat))
-
+            print(len(segmented_ecg))
+            print(len(labels))
             for i, segment in enumerate(segmented_ecg):
                 print(f"{i}/{len(segmented_ecg)}", end='\r')
                 time = generate_time(segment, fs)
@@ -94,5 +110,5 @@ if __name__ == "__main__":
 
                 left, bottom = convert_values_to_pixels(left, bottom)
                 right, top = convert_values_to_pixels(right, top)
-                f.write(f"{file}\t{i}_0\t{bottom}\t{top}\t{left}\t{right}\n")
+                f.write(f"{file}\t{i}_0\t{bottom}\t{top}\t{left}\t{right}\t{label}\n")
             print()
