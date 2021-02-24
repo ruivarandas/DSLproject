@@ -3,6 +3,8 @@ import numpy as np
 from read_data_210 import read_mit_database, generate_time, _ax_plot, normalize, argparse
 import matplotlib.pylab as plt
 import json
+import io
+import cv2
 
 
 def segment_ecg(signal, timestamps, num_cycles=5, heartbeat=5):
@@ -81,6 +83,18 @@ def convert_to_binary(labels, bin_list):
     return new_labels
 
 
+def get_img_from_fig(fig, dpi=100):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi)
+    buf.seek(0)
+    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+    buf.close()
+    img = cv2.imdecode(img_arr, 1)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    return img
+
+
 if __name__ == "__main__":
     folder = r'./data/mit-bih-arrhythmia-database-1.0.0'
     parser = argparse.ArgumentParser()
@@ -120,7 +134,20 @@ if __name__ == "__main__":
                 left, right = left/fs - len(time)/(2*fs) + 5, right/fs - len(time)/(2*fs) + 5
                 bottom, top = (bottom-np.mean(segment))*2/np.ptp(segment), (top-np.mean(segment))*2/np.ptp(segment)
 
+                # print(right, left, top, bottom, timestamps[i+num_cycles] - aux, timestamps[i+num_cycles+1] - aux)
+                fig = plt.figure(figsize=(30, 4.5))
+                _ = _ax_plot()
+                time = generate_time(segment, fs)
+                _ = plt.plot(np.array(time) - len(time)/(2*fs) + 5, normalize(segment), color='black')
+                _ = plt.plot([left, right], [top, bottom], color=(55/255, 55/255, 55/255, 1), marker='o', linewidth=0)
+                # plt.hlines([top, bottom], left, right, color=('55', '55', '55', '1'))
+                # plt.vlines([left, right], bottom, top, color=('55', '55', '55', '1'))
+
+                x, y = np.where(get_img_from_fig(fig)[:, :, 0] == 55)
+                left, rigth, bottom, up = min(x), max(x), min(y), max(y)
+
                 left, bottom = convert_values_to_pixels(left, bottom)
                 right, top = convert_values_to_pixels(right, top)
+                plt.close()
                 f.write(f"{file}\t{i}_0\t{bottom}\t{top}\t{left}\t{right}\t{labels[i]}\n")
             print()
