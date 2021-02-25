@@ -146,9 +146,9 @@ if __name__ == "__main__":
 
                 x, y = np.where(get_img_from_fig(fig)[:, :, 0] == 55)
                 left, rigth, bottom, up = min(x), max(x), min(y), max(y)
-
-                left, bottom = convert_values_to_pixels(left, bottom)
-                right, top = convert_values_to_pixels(right, top)
+                
+                # left, bottom = convert_values_to_pixels(left, bottom)
+                # right, top = convert_values_to_pixels(right, top)
                 plt.close()
                 f.write(f"{file}\t{i}_0\t{bottom}\t{top}\t{left}\t{right}\t{labels[i]}\n")
             print()
