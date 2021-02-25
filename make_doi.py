@@ -106,7 +106,8 @@ if __name__ == "__main__":
     folders = []
     for file in set([file.split('.')[0] for file in os.listdir(folder)]):
         try:
-            folders.append(int(file))
+            if int(file) in [100, 103,105,111,113,117,121,123,200,202,210,212,213,214,219,221,222,228,231,232,233,234]:
+                folders.append(int(file))
         except ValueError:
             pass
 
