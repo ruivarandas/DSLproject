@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from read_data_210 import read_mit_database, generate_time, _ax_plot, normalize, argparse
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 import json
 import io
 import cv2
@@ -95,6 +95,19 @@ def get_img_from_fig(fig, dpi=100):
     return img
 
 
+def get_pixels(fig, ax, x, y):
+    xy_pixels = ax.transData.transform(np.vstack([x,y]).T)
+    xpix, ypix = xy_pixels.T
+
+    # In matplotlib, 0,0 is the lower left corner, whereas it's usually the upper
+    # left for most image software, so we'll flip the y-coords...
+    width, height = fig.canvas.get_width_height()
+    ypix = height - ypix
+
+    for xp, yp in zip(xpix, ypix):
+        return int(xp), int(yp)
+
+
 if __name__ == "__main__":
     folder = r'./data/mit-bih-arrhythmia-database-1.0.0'
     parser = argparse.ArgumentParser()
@@ -124,8 +137,8 @@ if __name__ == "__main__":
             R_peaks = annotations.sample
             fs = annotations.fs
             segmented_ecg, limits = segment_ecg(signal[:, 0], R_peaks, 5, beat)
-            print(len(segmented_ecg))
-            print(len(labels))
+            # print(len(segmented_ecg))
+            # print(len(labels))
             for i, segment in enumerate(segmented_ecg):
                 print(f"{i}/{len(segmented_ecg)}", end='\r')
                 time = generate_time(segment, fs)
@@ -137,18 +150,27 @@ if __name__ == "__main__":
 
                 # print(right, left, top, bottom, timestamps[i+num_cycles] - aux, timestamps[i+num_cycles+1] - aux)
                 fig = plt.figure(figsize=(30, 4.5))
-                _ = _ax_plot()
+                ax = _ax_plot()
                 time = generate_time(segment, fs)
                 _ = plt.plot(np.array(time) - len(time)/(2*fs) + 5, normalize(segment), color='black')
-                _ = plt.plot([left, right], [top, bottom], color=(55/255, 55/255, 55/255, 1), marker='o', linewidth=0)
+                _ = plt.plot([left, right], [top, bottom], color=(55/255, 55/255, 55/255, 1), marker='.', linewidth=0)
                 # plt.hlines([top, bottom], left, right, color=('55', '55', '55', '1'))
                 # plt.vlines([left, right], bottom, top, color=('55', '55', '55', '1'))
+                # plt.show()
+                # input()
 
-                x, y = np.where(get_img_from_fig(fig)[:, :, 0] == 55)
-                left, rigth, bottom, up = min(x), max(x), min(y), max(y)
-                
+                left, top = get_pixels(fig, ax, left, top)
+                right, bottom = get_pixels(fig, ax, right, bottom)
+
+                # img = get_img_from_fig(fig)[:, :, 0]
+                # x, y = np.where(img == 55)
+                # left, right, bottom, top = min(x), max(x), min(y), max(y)
+                # print(left, right, bottom, top, img.shape)
+                # print(x, y)
+
                 # left, bottom = convert_values_to_pixels(left, bottom)
                 # right, top = convert_values_to_pixels(right, top)
                 plt.close()
                 f.write(f"{file}\t{i}_0\t{bottom}\t{top}\t{left}\t{right}\t{labels[i]}\n")
+
             print()
