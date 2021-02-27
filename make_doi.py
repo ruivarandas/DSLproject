@@ -171,6 +171,7 @@ if __name__ == "__main__":
                 # left, bottom = convert_values_to_pixels(left, bottom)
                 # right, top = convert_values_to_pixels(right, top)
                 plt.close()
-                f.write(f"{file}\t{i}_0\t{bottom}\t{top}\t{left}\t{right}\t{labels[i]}\n")
 
+                f.write(f"{file}\t{i+1}_0\t{bottom}\t{top}\t{left}\t{right}\t{labels[i]}\n")
+                
             print()
