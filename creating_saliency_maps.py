@@ -84,8 +84,8 @@ with open("./config.json") as f:
 if __name__ == '__main__':
     MODELS_PATH = Path(f"./models/")
     MAP_DIR = "./attribution_maps/saliency_maps"
-    DELETE_PRIOR_DIR = True
-    TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data')
+    DELETE_PRIOR_DIR = False
+    TEST_DATA_PATH = Path(f'./data/figures_final/test')
     NR_BATCHES = 2
 
     for HEARTBEAT in ["initial", "final", "mid"]:
