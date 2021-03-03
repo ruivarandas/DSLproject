@@ -108,7 +108,7 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
 
         # print(f"batch nr: {i+1}", end='\r')
         sys.stdout.write('\r' + f"batch nr: {i+1}")
-        print("\n")
+        # print("\n")
         if map_type != "gb_grad_cam_map":
             attr_map, score_max_index = get_maps(map_type, model, inputs)
         else:
@@ -213,12 +213,14 @@ def labels():
         ]}
     return _
 
-def create_maps_folders(main_folder, beat, labels, delete_prior):
-    if delete_prior and Path(main_folder).exists():
-        shutil.rmtree(main_folder)
-    for label in labels:
-        folder = Path(main_folder) / f"label_{beat}_beat/"
-        Path(folder / label).mkdir(parents=True, exist_ok=True)
+
+def create_maps_folders():
+    for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
+        for beat in ["initial", "final", "mid"]:
+            folder = Path(f"./attribution_maps/{attr_map_type}") / f"label_{beat}_beat/"
+            print(folder)
+            for label in ['abnormal', "normal"]:
+                Path(folder / label).mkdir(parents=True, exist_ok=True)
     return folder
 
 
@@ -227,23 +229,20 @@ if __name__ == '__main__':
     parser.add_argument("-save")
     args = parser.parse_args()
     save = str(args.save)
-    for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
-        print(f"BEAT:{attr_map_type}")
-
-        for HEARTBEAT in ["initial", "final", "mid"]:
-            print(f"MAP: {HEARTBEAT}\n")
-
-            if save == "y":
-                save = create_maps_folders(f"./attribution_maps/{attr_map_type}", HEARTBEAT, labels(), False)
-            else:
-                save = None
-            roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
-            MODELS_PATH = Path(f"../models/")
-            MODEL_NAME = get_model_name(HEARTBEAT)
-            TEST_DATA_PATH = Path(f'../data/figures_final/test')
-            BATCH_SIZE = 16
-            rois_dict = read_rois_file_as_dict(roi_file_path, TEST_DATA_PATH)
-            values, prediction_results, labels = metrics_one_heartbeat(TEST_DATA_PATH, MODELS_PATH, MODEL_NAME,
-                                                                       HEARTBEAT, BATCH_SIZE, rois_dict, attr_map_type,
-                                                                       save)
-            save_results(values, prediction_results, labels, HEARTBEAT, attr_map_type)
+    create_maps_folders()
+    # for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
+    #     print(f"BEAT:{attr_map_type}")
+    #
+    #     for HEARTBEAT in ["initial", "final", "mid"]:
+    #         print(f"MAP: {HEARTBEAT}\n")
+    #
+    #         roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
+    #         MODELS_PATH = Path(f"./models/")
+    #         MODEL_NAME = get_model_name(HEARTBEAT)
+    #         TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data')
+    #         BATCH_SIZE = 16
+    #         rois_dict = read_rois_file_as_dict(roi_file_path, TEST_DATA_PATH)
+    #         values, prediction_results, labels = metrics_one_heartbeat(TEST_DATA_PATH, MODELS_PATH, MODEL_NAME,
+    #                                                                    HEARTBEAT, BATCH_SIZE, rois_dict, attr_map_type,
+    #                                                                    save)
+    #         save_results(values, prediction_results, labels, HEARTBEAT, attr_map_type)

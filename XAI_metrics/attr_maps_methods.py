@@ -132,7 +132,7 @@ def deprocess_image_gb(img):
     return np.uint8(img*255)
 
 
-def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, labels, save_folder):
+def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, labels):
     heatmap = np.float32(batch_grad_cam[index, 0].cpu().detach())
     heatmap = cv2.resize(heatmap, (224, 224))
     heatmap = np.uint8(255 * heatmap)
