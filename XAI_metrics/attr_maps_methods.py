@@ -4,6 +4,16 @@ from torchray.attribution.grad_cam import gradient_to_grad_cam_saliency
 from torchray.attribution.guided_backprop import GuidedBackpropReLU
 from torchray.attribution.common import Probe, get_module
 import cv2
+import matplotlib.pyplot as plt
+from torchvision import transforms
+
+def deprocess(image):
+    transform = transforms.Compose([
+        transforms.Normalize(mean=[0, 0, 0], std=[4.3668, 4.4643, 4.4444]),
+        transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1, 1, 1]),
+        transforms.ToPILImage(),
+    ])
+    return transform(image)
 
 """
 Saliency maps
@@ -20,6 +30,16 @@ def batch_saliency(model, inputs):
 
 def prepare_saliency(sal_map, index):
     return sal_map[index].cpu().numpy()
+
+
+def saving_saliency_map(sal, index, x, input_filename, main_folder, label, pred_res):
+    plt.figure()
+    plt.imshow(sal, cmap=plt.cm.hot, alpha=.7);
+    plt.imshow(deprocess(x[index].cpu()), alpha=.4);
+    plt.axis('off')
+    plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
+    plt.close();
+
 
 """
 Grad CAM maps
@@ -47,6 +67,19 @@ def preparing_grad_cam(batch_grad_cam, index):
     heatmap = np.float32(batch_grad_cam[index, 0].cpu().detach())
     return cv2.resize(heatmap, (224, 224))
     # return np.uint8(255 * heatmap)
+
+
+def saving_grad_cam_map(sal, index, x, input_filename, main_folder, label, pred_res):
+    plt.figure()
+    img = np.array(deprocess(x[index].cpu().detach()))
+    sal = np.uint8(255 * sal)
+    plt.imshow(sal, alpha=.7)
+    plt.imshow(img, alpha=.8)
+    plt.axis('off')
+    plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
+    plt.close();
+
+
 
 """
 Guided Back propagation Grad Cam maps
@@ -99,7 +132,7 @@ def deprocess_image_gb(img):
     return np.uint8(img*255)
 
 
-def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, labels):
+def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, labels, save_folder):
     heatmap = np.float32(batch_grad_cam[index, 0].cpu().detach())
     heatmap = cv2.resize(heatmap, (224, 224))
     heatmap = np.uint8(255 * heatmap)
@@ -108,4 +141,9 @@ def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, label
     gb = guided_backprop_model(x[index].unsqueeze(0).detach().cpu(), target_category=labels[index].cpu())
     gb = gb.transpose((1, 2, 0))
     #return cv2.cvtColor(deprocess_image_gb(cam_mask * gb), cv2.COLOR_BGR2GRAY)
-    return cam_mask*gb
+    final_map = deprocess_image_gb(cam_mask * gb)
+
+    return final_map
+
+def saving_gb_grad_cam(gb_grad_map, input_filename, main_folder, label, pred_res):
+    cv2.imwrite(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"), gb_grad_map)

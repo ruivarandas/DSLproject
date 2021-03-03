@@ -6,6 +6,9 @@ import torch
 import numpy as np
 import csv
 import sys
+import argparse
+import shutil
+import random
 
 """
 ROI functions
@@ -25,9 +28,9 @@ def get_roi(sample_path, rois_dict):
     roi = None
     if f"{stem_split[0]}_{stem_split[1]}" != "0_0":
         try:
-            roi = rois_dict[str(sample_path.parents[1] / "normal" /  sample_path.stem)]
+            roi = rois_dict[str(sample_path.parents[1] / "normal" / sample_path.stem)]
         except KeyError:
-            roi = rois_dict[str(sample_path.parents[1] / "abnormal" /  sample_path.stem)]
+            roi = rois_dict[str(sample_path.parents[1] / "abnormal" / sample_path.stem)]
     return roi
 
 
@@ -61,7 +64,6 @@ def metric1(attr_map, top_left, right_bottom):
 """
 Attribution maps
 """
-
 def get_maps(map_type, model, inputs):
     if map_type == "saliency_map":
         return batch_saliency(model, inputs)
@@ -83,10 +85,18 @@ def imshow(img):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+def save_maps(map, index, x, input_filename, save, label, pred_res, map_type):
+    if map_type == "saliency_map":
+        saving_saliency_map(map, index, x, input_filename, save, label, pred_res)
+    elif map_type == "grad_cam_map":
+        saving_grad_cam_map(map, index, x, input_filename, save, label, pred_res)
+    elif map_type == "gb_grad_cam_map":
+        saving_gb_grad_cam(map, input_filename, save, label, pred_res)
+
 """
 Computing metrics
 """
-def compute_metrics(model, data, batch_size, rois_dict, map_type):
+def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
     if map_type == "gb_grad_cam_map":
         gb_model = GuidedBackpropReLUModel(model=model)
 
@@ -98,15 +108,19 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type):
 
         # print(f"batch nr: {i+1}", end='\r')
         sys.stdout.write('\r' + f"batch nr: {i+1}")
+        print("\n")
         if map_type != "gb_grad_cam_map":
             attr_map, score_max_index = get_maps(map_type, model, inputs)
         else:
             attr_map, score_max_index, x = get_maps(map_type, model, inputs)
 
+        flag = False
+
         for index in range(len(attr_map)):
+            input_filename = Path(data['test'].dataset.samples[i * len(attr_map) + index][0]).stem
+
             if map_type == "gb_grad_cam_map":
                 map_prepared = prepare_attr_maps(map_type, attr_map, index, gb_model, x, labels)
-                imshow(map_prepared)
             else:
                 map_prepared = prepare_attr_maps(map_type, attr_map, index)
             label = classes[labels[index]]
@@ -131,16 +145,23 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type):
                 labels_list.append(label)
                 pred_verification.append(pred_res)
 
+                if not flag and index == random.randint(0, 15):
+                    # print(index)
+                    flag = True
+                    if save:
+                        # print(f"Map saved: {index}")
+                        save_maps(map_prepared, index, inputs, input_filename, save, label, pred_res, map_type)
+
     return metric_values, pred_verification, labels_list
 
 
-def metrics_one_heartbeat(data_path, models_main_path, model_name, beat, batches, rois, map_type):
+def metrics_one_heartbeat(data_path, models_main_path, model_name, beat, batches, rois, map_type, save):
     data_prep = DataPreparation(str(data_path))
     data, size = data_prep.create_dataloaders(batches, False, 4)
     model_path = models_main_path / f"label_{beat}/{model_name}.pth"
     model = torch.load(model_path, map_location=torch.device(0))
     model.eval();
-    return compute_metrics(model, data, batches, rois, map_type)
+    return compute_metrics(model, data, batches, rois, map_type, save)
 
 
 def save_results(metric_values, predictions_verification, labels_true, beat, map_type):
@@ -172,17 +193,57 @@ def get_model_name(beat):
     return d[beat]
 
 
+def labels():
+    _ = {
+        "abnormal": [
+            "A",
+            "a",
+            "J",
+            "S",
+            "V",
+            "E",
+            "F"
+        ],
+        "normal": [
+            "N",
+            "L",
+            "R",
+            "e",
+            "j"
+        ]}
+    return _
+
+def create_maps_folders(main_folder, beat, labels, delete_prior):
+    if delete_prior and Path(main_folder).exists():
+        shutil.rmtree(main_folder)
+    for label in labels:
+        folder = Path(main_folder) / f"label_{beat}_beat/"
+        Path(folder / label).mkdir(parents=True, exist_ok=True)
+    return folder
+
+
 if __name__ == '__main__':
-    for HEARTBEAT in ["initial", "final", "mid"]:
-        print(f"BEAT:{HEARTBEAT}")
-        for attr_map_type in["gb_grad_cam_map"]: #["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
-            print(f"MAP: {attr_map_type}\n")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-save")
+    args = parser.parse_args()
+    save = str(args.save)
+    for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
+        print(f"BEAT:{attr_map_type}")
+
+        for HEARTBEAT in ["initial", "final", "mid"]:
+            print(f"MAP: {HEARTBEAT}\n")
+
+            if save == "y":
+                save = create_maps_folders(f"./attribution_maps/{attr_map_type}", HEARTBEAT, labels(), False)
+            else:
+                save = None
             roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
-            MODELS_PATH = Path(f"./models/")
+            MODELS_PATH = Path(f"../models/")
             MODEL_NAME = get_model_name(HEARTBEAT)
-            TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data')
+            TEST_DATA_PATH = Path(f'../data/figures_final/test')
             BATCH_SIZE = 16
             rois_dict = read_rois_file_as_dict(roi_file_path, TEST_DATA_PATH)
             values, prediction_results, labels = metrics_one_heartbeat(TEST_DATA_PATH, MODELS_PATH, MODEL_NAME,
-                                                                       HEARTBEAT, BATCH_SIZE, rois_dict, attr_map_type)
+                                                                       HEARTBEAT, BATCH_SIZE, rois_dict, attr_map_type,
+                                                                       save)
             save_results(values, prediction_results, labels, HEARTBEAT, attr_map_type)

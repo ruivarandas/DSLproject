@@ -101,10 +101,7 @@ def guided_backprop_grad_cam(model, data, main_folder, n_batches=None):
 
             gb = gb_model(x[index].unsqueeze(0).detach().cpu(), target_category=labels[index].cpu())
             gb = gb.transpose((1, 2, 0))
-            cam_gb = deprocess_image_gb(cam_mask*gb) # HERE!!!!!
-
-
-            plt.imshow(cam_gb)
+            cam_gb = deprocess_image_gb(cam_mask*gb)
 
             plt.axis('off')
 
@@ -118,6 +115,9 @@ def guided_backprop_grad_cam(model, data, main_folder, n_batches=None):
             input_filename = Path(data['test'].dataset.samples[i * len(saliency) + index][0]).stem
             plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
             plt.close();
+#         if n_batches:
+#             if i + 1 == n_batches:
+#                 break
         i += 1
 
 def create_gb_grad_cam_maps_one_heartbeat(data_path, models_main_path, model_name, beat, saliency_maps_path, nr_egs=None):

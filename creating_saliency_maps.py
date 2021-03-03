@@ -46,8 +46,8 @@ def saliency_maps(model, data, main_folder, n_batches=None):
                 pred_res = "wrong"
             #
             plt.figure()
-            plt.imshow(sal, cmap=plt.cm.hot, alpha=.7);
-            plt.imshow(deprocess(x[index].cpu()), alpha=.4);
+            img1 = plt.imshow(sal, cmap=plt.cm.hot, alpha=.7);
+            img2 = plt.imshow(deprocess(x[index].cpu()), alpha=.4);
             plt.axis('off')
 
             input_filename = Path(data['test'].dataset.samples[i * len(saliency) + index][0]).stem
