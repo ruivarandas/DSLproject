@@ -1,4 +1,4 @@
-from notebooks.prep_test_data import *
+from prep_test_data import *
 from attr_maps_methods import *
 from pathlib import Path
 import json
@@ -54,7 +54,7 @@ def metric1(attr_map, top_left, right_bottom):
     roi_sum = np.sum(attr_map[top_left[1]:right_bottom[1], top_left[0]:right_bottom[0]])
     map_sum = np.sum(attr_map)
     if map_sum == 0:
-        return 0
+        return np.nan
     return roi_sum/map_sum
 
 
@@ -67,12 +67,16 @@ def get_maps(map_type, model, inputs):
         return batch_saliency(model, inputs)
     elif map_type == "grad_cam_map":
         return grad_cam_batch(model, inputs)
+    elif map_type == "gb_grad_cam_map":
+        return grad_cam_batch(model, inputs, gb_cam=True)
 
-def prepare_attr_maps(map_type, attr_map, index):
+def prepare_attr_maps(map_type, attr_map, index, gb_model=None, x=None, labels=None):
     if map_type == "saliency_map":
         return prepare_saliency(attr_map, index)
     elif map_type == "grad_cam_map":
         return preparing_grad_cam(attr_map, index)
+    elif map_type == "gb_grad_cam_map":
+        return preparing_gb_grad_cam(attr_map, index, gb_model, x, labels)
 
 def imshow(img):
     cv2.imshow("test", img)
@@ -83,6 +87,9 @@ def imshow(img):
 Computing metrics
 """
 def compute_metrics(model, data, batch_size, rois_dict, map_type):
+    if map_type == "gb_grad_cam_map":
+        gb_model = GuidedBackpropReLUModel(model=model)
+
     classes = data["test"].dataset.classes
     metric_values = []
     pred_verification = []
@@ -91,13 +98,17 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type):
 
         # print(f"batch nr: {i+1}", end='\r')
         sys.stdout.write('\r' + f"batch nr: {i+1}")
-
-        attr_map, score_max_index = get_maps(map_type, model, inputs)
+        if map_type != "gb_grad_cam_map":
+            attr_map, score_max_index = get_maps(map_type, model, inputs)
+        else:
+            attr_map, score_max_index, x = get_maps(map_type, model, inputs)
 
         for index in range(len(attr_map)):
-
-            map_prepared = prepare_attr_maps(map_type, attr_map, index)
-
+            if map_type == "gb_grad_cam_map":
+                map_prepared = prepare_attr_maps(map_type, attr_map, index, gb_model, x, labels)
+                imshow(map_prepared)
+            else:
+                map_prepared = prepare_attr_maps(map_type, attr_map, index)
             label = classes[labels[index]]
 
             sample_path = Path(data['test'].dataset.samples[i*batch_size+index][0])
@@ -164,7 +175,7 @@ def get_model_name(beat):
 if __name__ == '__main__':
     for HEARTBEAT in ["initial", "final", "mid"]:
         print(f"BEAT:{HEARTBEAT}")
-        for attr_map_type in ["saliency_map", "grad_cam_map"]:
+        for attr_map_type in["gb_grad_cam_map"]: #["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
             print(f"MAP: {attr_map_type}\n")
             roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
             MODELS_PATH = Path(f"./models/")
