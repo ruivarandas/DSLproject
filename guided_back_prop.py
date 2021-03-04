@@ -2,7 +2,7 @@ from prep_test_data import *
 from pathlib import Path
 import json
 import torch
-from matplotlib import pyplot as plt
+import sys
 from torchray.attribution.common import Probe, get_module
 from torchray.attribution.grad_cam import gradient_to_grad_cam_saliency
 from torchray.attribution.guided_backprop import GuidedBackpropReLU
@@ -76,7 +76,8 @@ def guided_backprop_grad_cam(model, data, main_folder, n_batches=None):
     classes = data["test"].dataset.classes
     i = 0
     for inputs, labels in data['test']:
-        print(f"{i}/{int(len(data['test'].dataset.samples)/16)}", end="\r")
+        # print(f"{i}/{int(len(data['test'].dataset.samples)/16)}", end="\r")
+        sys.stdout.write('\r' + f"batch nr: {i + 1}")
         inputs = inputs#.to('cuda:0')
         labels = labels
         x = inputs
@@ -91,7 +92,6 @@ def guided_backprop_grad_cam(model, data, main_folder, n_batches=None):
         saliency = gradient_to_grad_cam_saliency(probe.data[0])
 
         for index in range(len(saliency)):
-            plt.figure()
             heatmap = np.float32(saliency[index, 0].cpu().detach())
             img = np.array(deprocess(x[index].cpu().detach()))
 
@@ -103,8 +103,6 @@ def guided_backprop_grad_cam(model, data, main_folder, n_batches=None):
             gb = gb.transpose((1, 2, 0))
             cam_gb = deprocess_image_gb(cam_mask*gb)
 
-            plt.axis('off')
-
             label = classes[labels[index]]
             true = labels[index]
             pred = score_max_index[index]
@@ -113,8 +111,8 @@ def guided_backprop_grad_cam(model, data, main_folder, n_batches=None):
                 pred_res = "wrong"
 
             input_filename = Path(data['test'].dataset.samples[i * len(saliency) + index][0]).stem
-            plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
-            plt.close();
+            cv2.imwrite(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"), cam_gb)
+
 #         if n_batches:
 #             if i + 1 == n_batches:
 #                 break
@@ -124,7 +122,7 @@ def create_gb_grad_cam_maps_one_heartbeat(data_path, models_main_path, model_nam
     data_prep = DataPreparation(str(data_path))
     data, size = data_prep.create_dataloaders(16, False, 4)
     model_path = models_main_path / f"label_{beat}/{model_name}.pth"
-    model = torch.load(model_path)
+    model = torch.load(model_path, map_location=torch.device(0))
     model.eval();
     guided_backprop_grad_cam(model, data, saliency_maps_path, nr_egs)
 
@@ -145,7 +143,8 @@ if __name__ == '__main__':
     MODELS_PATH = Path(f"./models/")
     MAP_DIR = "./attribution_maps/gb_grad_cam"
     DELETE_PRIOR_DIR = False
-    TEST_DATA_PATH = Path(f'./data/figures_final/test')
+    # TEST_DATA_PATH = Path(f'./data/figures_final/test')
+    TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data')
     NR_BATCHES = 2
 
     for HEARTBEAT in ["initial", "final", "mid"]:

@@ -7,7 +7,6 @@ import numpy as np
 import csv
 import sys
 import argparse
-import shutil
 import random
 
 """
@@ -99,11 +98,11 @@ Computing metrics
 def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
     if map_type == "gb_grad_cam_map":
         gb_model = GuidedBackpropReLUModel(model=model)
-
     classes = data["test"].dataset.classes
     metric_values = []
     pred_verification = []
     labels_list = []
+
     for i, (inputs, labels) in enumerate(data['test']):
 
         # print(f"batch nr: {i+1}", end='\r')
@@ -120,9 +119,10 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
             input_filename = Path(data['test'].dataset.samples[i * len(attr_map) + index][0]).stem
 
             if map_type == "gb_grad_cam_map":
-                map_prepared = prepare_attr_maps(map_type, attr_map, index, gb_model, x, labels)
+                map_prepared = prepare_attr_maps(map_type, attr_map, index, gb_model, inputs, labels)
             else:
                 map_prepared = prepare_attr_maps(map_type, attr_map, index)
+
             label = classes[labels[index]]
 
             sample_path = Path(data['test'].dataset.samples[i*batch_size+index][0])
@@ -131,8 +131,8 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
 
             if roi:
                 top_left, bottom_right = get_roi_points(roi)
-                if map_type == "saliency_map":
-                    top_left, bottom_right = transforming_roi_points(top_left, bottom_right)
+                # if map_type == "saliency_map":
+                top_left, bottom_right = transforming_roi_points(top_left, bottom_right)
 
                 metric_values.append(str(metric1(map_prepared, top_left, bottom_right)))
 
@@ -146,13 +146,10 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
                 labels_list.append(label)
                 pred_verification.append(pred_res)
 
-                if not flag and index == random.randint(0, 15):
-                    # print(index)
-                    flag = True
-                    if save:
-                        # print(f"Map saved: {index}")
+                if save:
+                    if not flag and index == random.randint(0, 15):
+                        flag = True
                         save_maps(map_prepared, index, inputs, input_filename, save, label, pred_res, map_type)
-
     return metric_values, pred_verification, labels_list
 
 
@@ -230,22 +227,30 @@ if __name__ == '__main__':
     args = parser.parse_args()
     save = str(args.save)
 
-    create_maps_folders()
+    # MODELS_PATH = Path(f"./models/")
+    MODELS_PATH = Path(f"../models/")  # fire-ai path
+    # TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data_subset')
+    TEST_DATA_PATH = Path(f'../data/figures_final/test')  # fire-ai path
+
+    BATCH_SIZE = 16
+    if save == "y":
+        create_maps_folders()
     for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
-        print(f"\nBEAT:{attr_map_type}")
+        print(f"\nMAP:{attr_map_type}")
 
         for HEARTBEAT in ["initial", "final", "mid"]:
-            print(f"\nMAP: {HEARTBEAT}\n")
-            roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
-            MODELS_PATH = Path(f"./models/")
+            print(f"\nBEAT: {HEARTBEAT}\n")
+            # roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
+            roi_file_path = list(Path("../ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]  # fire-ai path
+
             MODEL_NAME = get_model_name(HEARTBEAT)
-            # TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data')
-            TEST_DATA_PATH = Path(f'../data/figures_final/test')
-            BATCH_SIZE = 16
+
             if save == "y":
-                save = Path(f"./attribution_maps/{attr_map_type}") / f"label_{HEARTBEAT}_beat/"
+                folder = Path(f"./attribution_maps/{attr_map_type}") / f"label_{HEARTBEAT}_beat/"
+            else:
+                folder = None
             rois_dict = read_rois_file_as_dict(roi_file_path, TEST_DATA_PATH)
             values, prediction_results, labels = metrics_one_heartbeat(TEST_DATA_PATH, MODELS_PATH, MODEL_NAME,
                                                                        HEARTBEAT, BATCH_SIZE, rois_dict, attr_map_type,
-                                                                       save)
+                                                                       folder)
             save_results(values, prediction_results, labels, HEARTBEAT, attr_map_type)

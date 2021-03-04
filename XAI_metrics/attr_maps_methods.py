@@ -37,6 +37,7 @@ def saving_saliency_map(sal, index, x, input_filename, main_folder, label, pred_
     plt.imshow(sal, cmap=plt.cm.hot, alpha=.7);
     plt.imshow(deprocess(x[index].cpu()), alpha=.4);
     plt.axis('off')
+    # print(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
     plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
     plt.close();
 
@@ -45,10 +46,10 @@ def saving_saliency_map(sal, index, x, input_filename, main_folder, label, pred_
 Grad CAM maps
 """
 def grad_cam_batch(model, inputs, gb_cam=False):
-    if gb_cam:
-        x = inputs
-    else:
-        x = inputs.to(0)
+    # if gb_cam:
+    #     x = inputs
+    # else:
+    x = inputs.to(0)
     x.requires_grad_();
     saliency_layer = get_module(model, model.layer4)
     probe = Probe(saliency_layer, target='output')
@@ -65,7 +66,8 @@ def grad_cam_batch(model, inputs, gb_cam=False):
 
 def preparing_grad_cam(batch_grad_cam, index):
     heatmap = np.float32(batch_grad_cam[index, 0].cpu().detach())
-    return cv2.resize(heatmap, (224, 224))
+    final_map = cv2.resize(heatmap, (224, 224))
+    return final_map
     # return np.uint8(255 * heatmap)
 
 
@@ -86,8 +88,10 @@ Guided Back propagation Grad Cam maps
 """
 class GuidedBackpropReLUModel:
     def __init__(self, model):
-        self.model = model.cpu()
-#         self.model.eval()
+        # self.model = model.cpu()
+        self.model = model
+
+        self.model.eval()
 
         def recursive_relu_apply(module_top):
             for idx, module in module_top._modules.items():
@@ -99,12 +103,12 @@ class GuidedBackpropReLUModel:
         recursive_relu_apply(self.model)
 
     def forward(self, input_img):
+        # print(next(self.model.parameters()).is_cuda)
         return self.model(input_img)
 
     def __call__(self, input_img, target_category=None):
-
+        # print(input_img.device)
         input_img = input_img.requires_grad_(True)
-
         output = self.forward(input_img)
 
         if target_category == None:
@@ -112,7 +116,7 @@ class GuidedBackpropReLUModel:
 
         one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
         one_hot[0][target_category] = 1
-        one_hot = torch.from_numpy(one_hot).requires_grad_(True)
+        one_hot = torch.from_numpy(one_hot).requires_grad_(True).to(0)
 
         one_hot = torch.sum(one_hot * output)
         one_hot.backward(retain_graph=True)
@@ -124,26 +128,26 @@ class GuidedBackpropReLUModel:
 
 def deprocess_image_gb(img):
     """ see https://github.com/jacobgil/keras-grad-cam/blob/master/grad-cam.py#L65 """
-    img = img - np.mean(img)
-    img = img / (np.std(img) + 1e-5)
-    img = img * 0.1
-    img = img + 0.5
-    img = np.clip(img, 0, 1)
+    # img = img - np.mean(img)
+    # img = img / (np.std(img) + 1e-5)
+    # img = img * 0.1
+    # img = img + 0.5
+    # img = np.clip(img, 0, 1)
+
     return np.uint8(img*255)
 
 
 def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, labels):
+    # print(batch_grad_cam.device, x.device, labels.device)
     heatmap = np.float32(batch_grad_cam[index, 0].cpu().detach())
     heatmap = cv2.resize(heatmap, (224, 224))
     heatmap = np.uint8(255 * heatmap)
     cam_mask = cv2.merge([heatmap, heatmap, heatmap])
-
-    gb = guided_backprop_model(x[index].unsqueeze(0).detach().cpu(), target_category=labels[index].cpu())
+    gb = guided_backprop_model(x[index].unsqueeze(0).to(0), target_category=labels[index])
     gb = gb.transpose((1, 2, 0))
-    #return cv2.cvtColor(deprocess_image_gb(cam_mask * gb), cv2.COLOR_BGR2GRAY)
     final_map = deprocess_image_gb(cam_mask * gb)
-
-    return final_map
+    return cv2.cvtColor(final_map, cv2.COLOR_RGB2GRAY)
 
 def saving_gb_grad_cam(gb_grad_map, input_filename, main_folder, label, pred_res):
+
     cv2.imwrite(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"), gb_grad_map)
