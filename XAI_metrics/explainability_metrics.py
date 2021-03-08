@@ -157,6 +157,7 @@ def metrics_one_heartbeat(data_path, models_main_path, model_name, beat, batches
     data_prep = DataPreparation(str(data_path))
     data, size = data_prep.create_dataloaders(batches, False, 4)
     model_path = models_main_path / f"label_{beat}/{model_name}.pth"
+    print(model_path)
     model = torch.load(model_path, map_location=torch.device(0))
     model.eval();
     return compute_metrics(model, data, batches, rois, map_type, save)
@@ -168,7 +169,7 @@ def save_results(metric_values, predictions_verification, labels_true, beat, map
         "pred_results": predictions_verification,
         "true_labels": labels_true
     }
-    with open(f"XAI_metrics/{beat}_{map_type}_metrics.json", "w") as f:
+    with open(f"{beat}_{map_type}_metrics.json", "w") as f:
         json.dump(res_dict, f)
     f.close()
 
@@ -230,7 +231,6 @@ if __name__ == '__main__':
     # MODELS_PATH = Path(f"./models/")
     MODELS_PATH = Path(f"../models/")  # fire-ai path
     # TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data_subset')
-    TEST_DATA_PATH = Path(f'../data/figures_final/test')  # fire-ai path
 
     BATCH_SIZE = 16
     if save == "y":
@@ -240,6 +240,7 @@ if __name__ == '__main__':
 
         for HEARTBEAT in ["initial", "final", "mid"]:
             print(f"\nBEAT: {HEARTBEAT}\n")
+            TEST_DATA_PATH = Path(f'../data/figures_{HEARTBEAT}/test')  # fire-ai path
             # roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
             roi_file_path = list(Path("../ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]  # fire-ai path
 
@@ -249,6 +250,7 @@ if __name__ == '__main__':
                 folder = Path(f"./attribution_maps/{attr_map_type}") / f"label_{HEARTBEAT}_beat/"
             else:
                 folder = None
+
             rois_dict = read_rois_file_as_dict(roi_file_path, TEST_DATA_PATH)
             values, prediction_results, labels = metrics_one_heartbeat(TEST_DATA_PATH, MODELS_PATH, MODEL_NAME,
                                                                        HEARTBEAT, BATCH_SIZE, rois_dict, attr_map_type,
