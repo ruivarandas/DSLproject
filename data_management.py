@@ -28,7 +28,7 @@ class DirManagement:
     
     @property
     def raw_data_dir(self):
-        return Path(self.project_dir) / "raw_figures"
+        return Path(self.project_dir) / "raw_figures_no_grid"
     
     @property
     def all_filenames(self):
