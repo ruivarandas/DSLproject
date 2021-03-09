@@ -43,7 +43,7 @@ class ECGClassifier:
             return 'labels_bin'
     
     def labels_file(self, beat):
-        raw_data_dir = Path(self.configurations["data_dir"]) / "raw_figures_no_dir"
+        raw_data_dir = Path(self.configurations["data_dir"]) / "raw_figures_no_grid"
         labels = Path(self.configurations["data_dir"]) / f"labels_{beat}"
         print(f"Labels path: {labels}")
         for filename in labels.iterdir():
