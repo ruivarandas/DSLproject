@@ -10,6 +10,7 @@ if __name__ == '__main__':
         data = json.load(f)
 
     data["heartbeat"] = str(args.beat)
+    data["epochs"] = 20
 
     with open("config.json", "w") as f:
         json.dump(data, f)

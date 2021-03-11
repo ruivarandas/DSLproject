@@ -185,9 +185,9 @@ def beat_int(beat):
 
 def get_model_name(beat):
     d = {
-        "final": "resnet50_d_22_t_12_17",
-        "initial": "resnet50_d_22_t_19_13",
-        "mid": "resnet50_d_22_t_13_24"
+        "final": "resnet50_d_10_t_18_02",
+        "initial": "resnet50_d_10_t_12_10",
+        "mid": "resnet50_d_09_t_15_34"
     }
     return d[beat]
 
