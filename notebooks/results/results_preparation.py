@@ -11,7 +11,8 @@ def convert_to_float(data):
 
 
 def present_values(folder, params=None):
-    for beat in ['initial', 'mid', 'final']:
+    fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
+    for i, beat in enumerate(['initial', 'mid', 'final']):
         path_to_results = join(folder, f"{beat}_gb_grad_cam_map_metrics.json")
         with open(path_to_results, 'r') as file:
             sal_initial = load(file)
@@ -19,12 +20,18 @@ def present_values(folder, params=None):
         if params is not None:
             values = values[np.where(values != params)[0]]
         print(f"Mean value of {beat} beat: {np.nanmean(values)*100:.2f} +- {np.nanstd(values)*100:.2f}%")
-        make_histogram(values[np.logical_not(np.isnan(values))])
+
+        ax[i].hist(values[np.logical_not(np.isnan(values))], bins=100)
+        ax[i].title.set_text(beat)
+        ax[i].grid()
+        # make_histogram(values[np.logical_not(np.isnan(values))])
+    plt.tight_layout()
     plt.show()
 
 
 def present(folder, params=None):
-    for beat in ['initial', 'mid', 'final']:
+    fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
+    for i, beat in enumerate(['initial', 'mid', 'final']):
         path_to_results = join(folder, f"{beat}_gb_grad_cam_map_metrics.json")
         with open(path_to_results, 'r') as file:
             sal_initial = load(file)
@@ -32,7 +39,11 @@ def present(folder, params=None):
         if params is not None:
             values = values[np.where(np.array(sal_initial[params[0]]) == params[1])[0]]
         print(f"Mean value of {beat} beat: {np.nanmean(values)*100:.2f} +- {np.nanstd(values)*100:.2f}%")
-        make_histogram(values[np.logical_not(np.isnan(values))])
+
+        ax[i].hist(values[np.logical_not(np.isnan(values))], bins=100)
+        ax[i].title.set_text(beat)
+        ax[i].grid()
+        # make_histogram(values[np.logical_not(np.isnan(values))])
     plt.show()
 
 
