@@ -29,7 +29,7 @@ def present_values(folder, params=None):
     plt.show()
 
 
-def present(folder, params=None):
+def present(folder, params=None, but_zeros=False):
     fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
     for i, beat in enumerate(['initial', 'mid', 'final']):
         path_to_results = join(folder, f"{beat}_gb_grad_cam_map_metrics.json")
@@ -38,6 +38,8 @@ def present(folder, params=None):
         values = convert_to_float(sal_initial['values'])
         if params is not None:
             values = values[np.where(np.array(sal_initial[params[0]]) == params[1])[0]]
+        if but_zeros:
+            values = values[np.where(values != 0)[0]]
         print(f"Mean value of {beat} beat: {np.nanmean(values)*100:.2f} +- {np.nanstd(values)*100:.2f}%")
 
         ax[i].hist(values[np.logical_not(np.isnan(values))], bins=100)
