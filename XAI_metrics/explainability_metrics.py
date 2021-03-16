@@ -230,17 +230,17 @@ if __name__ == '__main__':
 
     #MODELS_PATH = Path(f"./models/")
     MODELS_PATH = Path(f"../models/")  # fire-ai path
-    TEST_DATA_PATH = Path(f'../data/figures_final/test')
+    # TEST_DATA_PATH = Path(f'../data/figures_final/test')
 
     BATCH_SIZE = 16
     if save == "y":
         create_maps_folders()
-    for attr_map_type in ["gb_grad_cam_map"]:  # ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
+    for attr_map_type in ["grad_cam_map"]:  # ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
         print(f"\nMAP:{attr_map_type}")
 
         for HEARTBEAT in ["initial", "final", "mid"]:
             print(f"\nBEAT: {HEARTBEAT}\n")
-            #TEST_DATA_PATH = Path(f'../data/figures_{HEARTBEAT}/test')  # fire-ai path
+            TEST_DATA_PATH = Path(f'../data/figures_{HEARTBEAT}/test')  # fire-ai path
             # roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
             roi_file_path = list(Path("../ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]  # fire-ai path
 
