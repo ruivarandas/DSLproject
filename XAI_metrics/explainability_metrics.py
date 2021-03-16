@@ -150,6 +150,7 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
                     if not flag and index == random.randint(0, 15):
                         flag = True
                         save_maps(map_prepared, index, inputs, input_filename, save, label, pred_res, map_type)
+
     return metric_values, pred_verification, labels_list
 
 
@@ -228,14 +229,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     save = str(args.save)
 
-    # MODELS_PATH = Path(f"./models/")
+    #MODELS_PATH = Path(f"./models/")
     MODELS_PATH = Path(f"../models/")  # fire-ai path
-    # TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data_subset')
+    #TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_test_data_subset')
 
     BATCH_SIZE = 16
     if save == "y":
         create_maps_folders()
-    for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
+    for attr_map_type in ["gb_grad_cam_map"]: # ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
         print(f"\nMAP:{attr_map_type}")
 
         for HEARTBEAT in ["initial", "final", "mid"]:
