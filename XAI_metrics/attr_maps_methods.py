@@ -68,7 +68,7 @@ def preparing_grad_cam(batch_grad_cam, index):
 
 
     heatmap = np.float32(batch_grad_cam[index, 0].cpu().detach())
-
+    print(heatmap)
     cv2.imwrite(f"7x7_img_{index}.png", np.uint8(heatmap*255))
 
 
