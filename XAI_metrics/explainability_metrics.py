@@ -133,8 +133,10 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
                 top_left, bottom_right = get_roi_points(roi)
                 # if map_type == "saliency_map":
                 top_left, bottom_right = transforming_roi_points(top_left, bottom_right)
-
-                metric_values.append(str(metric1(map_prepared, top_left, bottom_right)))
+                if map_type == "gb_grad_cam_map":
+                    metric_values.append(str(metric1(map_prepared, top_left, bottom_right, True)))
+                else:
+                    metric_values.append(str(metric1(map_prepared, top_left, bottom_right)))
 
                 true = labels[index]
                 pred = score_max_index[index]
