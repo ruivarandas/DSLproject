@@ -65,22 +65,17 @@ def grad_cam_batch(model, inputs, gb_cam=False):
 
 
 def preparing_grad_cam(batch_grad_cam, index):
-
-
     heatmap = np.float32(batch_grad_cam[index, 0].cpu().detach())
-    print(heatmap)
-    cv2.imwrite(f"7x7_img_{index}.png", np.uint8(heatmap*255))
-
-
+    #cv2.imwrite(f"7x7_img_{index}.png", np.uint8(heatmap*255))
     final_map = cv2.resize(heatmap, (224, 224))
-    return final_map
-    # return np.uint8(255 * heatmap)
+    # return final_map
+    return np.uint8((255 * final_map)/np.max(final_map))
 
 
 def saving_grad_cam_map(sal, index, x, input_filename, main_folder, label, pred_res):
     plt.figure()
     img = np.array(deprocess(x[index].cpu().detach()))
-    sal = np.uint8(255 * sal)
+    # sal = np.uint8(255 * sal)
     plt.imshow(sal, alpha=.7)
     plt.imshow(img, alpha=.8)
     plt.axis('off')

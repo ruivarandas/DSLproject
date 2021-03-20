@@ -53,10 +53,22 @@ def transforming_roi_points(left_top, right_bottom):
 Metrics definition
 """
 def metric1(attr_map, top_left, right_bottom):
-    roi_sum = np.sum(attr_map[top_left[1]:right_bottom[1], top_left[0]:right_bottom[0]])
+    roi_sum = np.sum(
+        attr_map[max(0,top_left[1]):max(0,right_bottom[1]), max(0, top_left[0]):max(0,right_bottom[0])])
     map_sum = np.sum(attr_map)
-    if map_sum == 0:
+
+    if map_sum == 0 \
+            or top_left[0] >= attr_map.shape[0] \
+            or top_left[1] >= attr_map.shape[1] \
+            or top_left[1] == right_bottom[1] \
+            or top_left[0] == right_bottom[0]:
         return np.nan
+    # elif roi_sum == 0:
+    #     # print()
+    #     # print(map_sum)
+    #     # print(top_left, right_bottom)
+    #     cv2.rectangle(attr_map, top_left, right_bottom, 255, 4)
+    #     imshow(attr_map)
     return roi_sum/map_sum
 
 
@@ -228,14 +240,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     save = str(args.save)
 
-    #MODELS_PATH = Path(f"./models/")
+    # MODELS_PATH = Path(f"./models/")
     MODELS_PATH = Path(f"../models/")  # fire-ai path
-    # TEST_DATA_PATH = Path(f'../data/figures_final/test')
+
+    # TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/figures_final/test')
 
     BATCH_SIZE = 16
+
     if save == "y":
         create_maps_folders()
-    for attr_map_type in ["grad_cam_map"]:  # ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
+    for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
         print(f"\nMAP:{attr_map_type}")
 
         for HEARTBEAT in ["initial", "final", "mid"]:
