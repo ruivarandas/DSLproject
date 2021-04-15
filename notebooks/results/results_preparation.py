@@ -10,10 +10,10 @@ def convert_to_float(data):
     return np.array([float(val) for val in data])
 
 
-def present_values(folder, params=None):
+def present_values(folder, map_type, params=None):
     fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
     for i, beat in enumerate(['initial', 'mid', 'final']):
-        path_to_results = join(folder, f"{beat}_gb_grad_cam_map_metrics.json")
+        path_to_results = join(folder, f"{beat}_{map_type}_map_metrics.json")
         with open(path_to_results, 'r') as file:
             sal_initial = load(file)
         values = convert_to_float(sal_initial['values'])
@@ -29,10 +29,10 @@ def present_values(folder, params=None):
     plt.show()
 
 
-def present(folder, params=None, but_zeros=False):
+def present(folder, map_type, params=None, but_zeros=False):
     fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
     for i, beat in enumerate(['initial', 'mid', 'final']):
-        path_to_results = join(folder, f"{beat}_gb_grad_cam_map_metrics.json")
+        path_to_results = join(folder, f"{beat}_{map_type}_map_metrics.json")
         with open(path_to_results, 'r') as file:
             sal_initial = load(file)
         values = convert_to_float(sal_initial['values'])

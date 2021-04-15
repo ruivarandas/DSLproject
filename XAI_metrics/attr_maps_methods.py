@@ -7,17 +7,23 @@ import cv2
 import matplotlib.pyplot as plt
 from torchvision import transforms
 
+
 def deprocess(image):
-    transform = transforms.Compose([
-        transforms.Normalize(mean=[0, 0, 0], std=[4.3668, 4.4643, 4.4444]),
-        transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1, 1, 1]),
-        transforms.ToPILImage(),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.Normalize(mean=[0, 0, 0], std=[4.3668, 4.4643, 4.4444]),
+            transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1, 1, 1]),
+            transforms.ToPILImage(),
+        ]
+    )
     return transform(image)
+
 
 """
 Saliency maps
 """
+
+
 def batch_saliency(model, inputs):
     x = inputs.to(0)
     x.requires_grad_()
@@ -25,8 +31,9 @@ def batch_saliency(model, inputs):
     score_max_index = scores.argmax(dim=1)
     score_max = scores[:, score_max_index]
     score_max.backward(torch.ones_like(score_max))
-    saliency, _ = torch.max(x.grad.data.abs(),dim=1)
+    saliency, _ = torch.max(x.grad.data.abs(), dim=1)
     return saliency, score_max_index
+
 
 def prepare_saliency(sal_map, index):
     return sal_map[index].cpu().numpy()
@@ -34,17 +41,19 @@ def prepare_saliency(sal_map, index):
 
 def saving_saliency_map(sal, index, x, input_filename, main_folder, label, pred_res):
     plt.figure()
-    plt.imshow(sal, cmap=plt.cm.hot, alpha=.7);
-    plt.imshow(deprocess(x[index].cpu()), alpha=.4);
-    plt.axis('off')
+    plt.imshow(sal, cmap=plt.cm.hot, alpha=0.7)
+    plt.imshow(deprocess(x[index].cpu()), alpha=0.4)
+    plt.axis("off")
     # print(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
     plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
-    plt.close();
+    plt.close()
 
 
 """
 Grad CAM maps
 """
+
+
 def grad_cam_batch(model, inputs, gb_cam=False):
     # if gb_cam:
     #     x = inputs
@@ -52,7 +61,7 @@ def grad_cam_batch(model, inputs, gb_cam=False):
     x = inputs.to(0)
     x.requires_grad_()
     saliency_layer = get_module(model, model.layer4)
-    probe = Probe(saliency_layer, target='output')
+    probe = Probe(saliency_layer, target="output")
     y = model(x)
     score_max_index = y.argmax(dim=1)
     z = y[:, score_max_index]
@@ -66,27 +75,28 @@ def grad_cam_batch(model, inputs, gb_cam=False):
 
 def preparing_grad_cam(batch_grad_cam, index):
     heatmap = np.float32(batch_grad_cam[index, 0].cpu().detach())
-    #cv2.imwrite(f"7x7_img_{index}.png", np.uint8(heatmap*255))
+    # cv2.imwrite(f"7x7_img_{index}.png", np.uint8(heatmap*255))
     final_map = cv2.resize(heatmap, (224, 224))
     # return final_map
-    return np.uint8((255 * final_map)/np.max(final_map))
+    return np.uint8((255 * final_map) / np.max(final_map))
 
 
 def saving_grad_cam_map(sal, index, x, input_filename, main_folder, label, pred_res):
     plt.figure()
     img = np.array(deprocess(x[index].cpu().detach()))
     # sal = np.uint8(255 * sal)
-    plt.imshow(sal, alpha=.7)
-    plt.imshow(img, alpha=.8)
-    plt.axis('off')
+    plt.imshow(sal, alpha=0.7)
+    plt.imshow(img, alpha=0.8)
+    plt.axis("off")
     plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
-    plt.close();
-
+    plt.close()
 
 
 """
 Guided Back propagation Grad Cam maps
 """
+
+
 class GuidedBackpropReLUModel:
     def __init__(self, model):
         # self.model = model.cpu()
@@ -97,7 +107,7 @@ class GuidedBackpropReLUModel:
         def recursive_relu_apply(module_top):
             for idx, module in module_top._modules.items():
                 recursive_relu_apply(module)
-                if module.__class__.__name__ == 'ReLU':
+                if module.__class__.__name__ == "ReLU":
                     module_top._modules[idx] = GuidedBackpropReLU.apply
 
         # replace ReLU with GuidedBackpropReLU
@@ -127,6 +137,19 @@ class GuidedBackpropReLUModel:
         return output
 
 
+def _deprocess_image_gb(img):
+    """
+    see https://github.com/jacobgil/keras-grad-cam/blob/master/grad-cam.py#L65
+    Used for metric computation
+    """
+    img = img - np.mean(img)
+    img = img / (np.std(img) + 1e-5)
+    img = img * 0.1
+    img = img + 0.5
+    img = np.clip(img, 0, 1)
+    img = np.uint8(img * 255)
+    return np.abs(img - int(0.5 * 255))
+
 def deprocess_image_gb(img):
     """ see https://github.com/jacobgil/keras-grad-cam/blob/master/grad-cam.py#L65 """
     img = img - np.mean(img)
@@ -134,9 +157,7 @@ def deprocess_image_gb(img):
     img = img * 0.1
     img = img + 0.5
     img = np.clip(img, 0, 1)
-    img = np.uint8(img * 255)
-    return np.abs(img - int(.5 * 255))
-
+    return np.uint8(img*255)
 
 def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, labels):
     # print(batch_grad_cam.device, x.device, labels.device)
@@ -144,11 +165,16 @@ def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, label
     heatmap = cv2.resize(heatmap, (224, 224))
     heatmap = np.uint8(255 * heatmap)
     cam_mask = cv2.merge([heatmap, heatmap, heatmap])
-    gb = guided_backprop_model(x[index].unsqueeze(0).to(0), target_category=labels[index])
+    gb = guided_backprop_model(
+        x[index].unsqueeze(0).to(0), target_category=labels[index]
+    )
     gb = gb.transpose((1, 2, 0))
     final_map = deprocess_image_gb(cam_mask * gb)
-    return cv2.cvtColor(final_map, cv2.COLOR_RGB2GRAY)
+    return final_map
+
 
 def saving_gb_grad_cam(gb_grad_map, input_filename, main_folder, label, pred_res):
 
-    cv2.imwrite(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"), gb_grad_map)
+    cv2.imwrite(
+        str(main_folder / f"{label}/{input_filename}_{pred_res}.png"), gb_grad_map
+    )
