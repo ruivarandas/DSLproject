@@ -5,14 +5,17 @@ from os import listdir
 import matplotlib.pyplot as plt
 import cv2
 
+BEATS = ['initial', 'final']
+
 
 def convert_to_float(data):
     return np.array([float(val) for val in data])
 
 
-def present_values(folder, map_type, params=None):
-    fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
-    for i, beat in enumerate(['initial', 'mid', 'final']):
+def present_values(folder, map_type, params=None, return_plot=False, return_data=False):
+    fig, ax = plt.subplots(ncols=len(BEATS), figsize=(10, 5))
+    data =[]
+    for i, beat in enumerate(BEATS):
         path_to_results = join(folder, f"{beat}_{map_type}_map_metrics.json")
         with open(path_to_results, 'r') as file:
             sal_initial = load(file)
@@ -22,16 +25,26 @@ def present_values(folder, map_type, params=None):
         print(f"Mean value of {beat} beat: {np.nanmean(values)*100:.2f} +- {np.nanstd(values)*100:.2f}%")
 
         ax[i].hist(values[np.logical_not(np.isnan(values))], bins=100)
+        data.append(values[np.logical_not(np.isnan(values))])
         ax[i].title.set_text(beat)
         ax[i].grid()
         # make_histogram(values[np.logical_not(np.isnan(values))])
     plt.tight_layout()
+
+    if return_plot:
+        print("Returning PLOT (not data).")
+        return ax
+    
+    if return_data:
+        print("Returning DATA (not plot).")
+        return data
     plt.show()
 
 
-def present(folder, map_type, params=None, but_zeros=False):
-    fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
-    for i, beat in enumerate(['initial', 'mid', 'final']):
+def present(folder, map_type, params=None, but_zeros=False, return_plot=False, return_data=False):
+    fig, ax = plt.subplots(ncols=len(BEATS), figsize=(10, 5))
+    data = []
+    for i, beat in enumerate(BEATS):
         path_to_results = join(folder, f"{beat}_{map_type}_map_metrics.json")
         with open(path_to_results, 'r') as file:
             sal_initial = load(file)
@@ -43,18 +56,57 @@ def present(folder, map_type, params=None, but_zeros=False):
         print(f"Mean value of {beat} beat: {np.nanmean(values)*100:.2f} +- {np.nanstd(values)*100:.2f}%")
 
         ax[i].hist(values[np.logical_not(np.isnan(values))], bins=100)
+        data.append(values[np.logical_not(np.isnan(values))])
         ax[i].title.set_text(beat)
         ax[i].grid()
         # make_histogram(values[np.logical_not(np.isnan(values))])
+
+    if return_plot:
+        print("Returning PLOT (not data).")
+        return ax
+
+    if return_data:
+        print("Returning DATA (not plot).")
+        return data
     plt.show()
 
 
 def get_accuracies(folder):
-    for beat in ['initial', 'mid', 'final']:
-        path_to_results = join(folder, f"{beat}_gb_grad_cam_map_metrics.json")
+    for beat in BEATS:
+        path_to_results = join(folder, f"{beat}_gb_grad_cam_map_metrics_v2.json")
         with open(path_to_results, 'r') as file:
             sal_initial = load(file)
             print(f"{beat} beat: {len(np.where(np.array(sal_initial['pred_results']) == 'ok')[0]) / len(sal_initial['pred_results'])}")
+
+
+def get_p_n(folder):
+    results = {'initial': {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}, 'mid': {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}, 'final': {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}}
+    for i, beat in enumerate(BEATS):
+        path_to_results = join(folder, f"{beat}_saliency_map_metrics.json")
+        with open(path_to_results, 'r') as file:
+            sal_initial = load(file)
+        for i in range(len(sal_initial['pred_results'])):
+            # print(sal_initial['pred_results'][i], sal_initial['true_labels'][i])
+            if sal_initial['pred_results'][i] == 'ok':
+                if sal_initial['true_labels'][i] == 'normal':
+                    results[beat]['tn'] += 1
+                else:
+                    results[beat]['tp'] += 1
+            else:
+                if sal_initial['true_labels'][i] == 'normal':
+                    results[beat]['fp'] += 1
+                else:
+                    results[beat]['fn'] += 1
+    return results
+
+def calculate_metrics(folder):
+    results = {'initial': {}, 'mid': {}, 'final': {}}
+    res = get_p_n(folder)
+    for beat in results.keys():
+        print(res[beat])
+        results[beat]['accuracy'] = (res[beat]['tp'] + res[beat]['tn']) / (res[beat]['tp'] + res[beat]['tn'] + res[beat]['fp'] + res[beat]['fn'])
+        results[beat]['precision'] = res[beat]['tp'] / (res[beat]['tp'] + res[beat]['fp'])
+    return results
 
 
 def maps_comparison(beat, map_name, label, folder=f"/mnt/Media/bernardo/"):
@@ -91,3 +143,10 @@ def make_histogram(d):
     maxfreq = n.max()
     # Set a clean upper y-axis limit.
     plt.ylim(top=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
+
+
+if '__main__' == __name__:
+    res = get_p_n(r'C:\Users\ruiva\PycharmProjects\DSLproject\XAI_metrics\metrics\no_grid')
+    # print(res)
+    res = calculate_metrics(r'C:\Users\ruiva\PycharmProjects\DSLproject\XAI_metrics\metrics\no_grid')
+    print(res)
