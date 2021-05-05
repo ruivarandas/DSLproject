@@ -6,7 +6,7 @@ from torchray.attribution.common import Probe, get_module
 import cv2
 import matplotlib.pyplot as plt
 from torchvision import transforms
-
+from explainability_metrics import imshow
 
 def deprocess(image):
     transform = transforms.Compose(
@@ -26,6 +26,8 @@ Saliency maps
 
 def batch_saliency(model, inputs):
     x = inputs.to(0)
+    print(x.shape)
+    imshow(np.uint8(x.cpu().numpy()))
     x.requires_grad_()
     scores = model(x)
     score_max_index = scores.argmax(dim=1)

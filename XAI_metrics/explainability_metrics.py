@@ -86,8 +86,10 @@ def metric1(attr_map, top_left, right_bottom):
     #     # print()
     #     # print(map_sum)
     #     # print(top_left, right_bottom)
-    #     cv2.rectangle(attr_map, top_left, right_bottom, 255, 4)
-    #     imshow(attr_map)
+
+    cv2.rectangle(attr_map, top_left, right_bottom, 255, 2)
+    imshow(attr_map)
+    cv2.imwrite("attr_map_roi.jpg", attr_map)
     return roi_sum / map_sum
 
 
@@ -266,27 +268,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
     save = str(args.save)
 
-    # MODELS_PATH = Path(f"./models/")
-    MODELS_PATH = Path(f"../models/")  # fire-ai path
+    MODELS_PATH = Path(f"./models/")
+    # MODELS_PATH = Path(f"../models/")  # fire-ai path
 
-    TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/figures_final/test')
+    TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/DSL_data/figures_final/test')
 
     BATCH_SIZE = 16
 
     if save == "y":
         create_maps_folders()
     for attr_map_type in [
-        "gb_grad_cam_map"
+        "saliency_map"
     ]:  # ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
         print(f"\nMAP:{attr_map_type}")
 
-        for HEARTBEAT in ["initial", "final", "mid"]:
+        for HEARTBEAT in ["final"]: # ["initial", "final", "mid"]:
             print(f"\nBEAT: {HEARTBEAT}\n")
-            TEST_DATA_PATH = Path(f"../data/figures_{HEARTBEAT}/test")  # fire-ai path
-            # roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
-            roi_file_path = list(Path("../ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[
-                0
-            ]  # fire-ai path
+            # TEST_DATA_PATH = Path(f"../data/figures_{HEARTBEAT}/test")  # fire-ai path
+            roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
+            # roi_file_path = list(Path("../ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[
+            #     0
+            # ]  # fire-ai path
 
             MODEL_NAME = get_model_name(HEARTBEAT)
 
