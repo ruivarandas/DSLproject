@@ -137,11 +137,8 @@ class GuidedBackpropReLUModel:
         return output
 
 
-def _deprocess_image_gb(img):
-    """
-    see https://github.com/jacobgil/keras-grad-cam/blob/master/grad-cam.py#L65
-    Used for metric computation
-    """
+def deprocess_image_gb(img):
+    """ see https://github.com/jacobgil/keras-grad-cam/blob/master/grad-cam.py#L65 """
     img = img - np.mean(img)
     img = img / (np.std(img) + 1e-5)
     img = img * 0.1
@@ -150,14 +147,6 @@ def _deprocess_image_gb(img):
     img = np.uint8(img * 255)
     return np.abs(img - int(0.5 * 255))
 
-def deprocess_image_gb(img):
-    """ see https://github.com/jacobgil/keras-grad-cam/blob/master/grad-cam.py#L65 """
-    img = img - np.mean(img)
-    img = img / (np.std(img) + 1e-5)
-    img = img * 0.1
-    img = img + 0.5
-    img = np.clip(img, 0, 1)
-    return np.uint8(img*255)
 
 def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, labels):
     # print(batch_grad_cam.device, x.device, labels.device)
@@ -170,7 +159,7 @@ def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, label
     )
     gb = gb.transpose((1, 2, 0))
     final_map = deprocess_image_gb(cam_mask * gb)
-    return final_map
+    return cv2.cvtColor(final_map, cv2.COLOR_RGB2GRAY)
 
 
 def saving_gb_grad_cam(gb_grad_map, input_filename, main_folder, label, pred_res):

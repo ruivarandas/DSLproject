@@ -126,7 +126,6 @@ def save_maps(map, index, x, input_filename, save, label, pred_res, map_type):
     elif map_type == "grad_cam_map":
         saving_grad_cam_map(map, index, x, input_filename, save, label, pred_res)
     elif map_type == "gb_grad_cam_map":
-        imshow(map)
         saving_gb_grad_cam(map, input_filename, save, label, pred_res)
 
 
@@ -253,7 +252,7 @@ def labels():
 
 def create_maps_folders():
     for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
-        for beat in ["initial", "final", "mid"]:
+        for beat in ["initial", "final"]:
             folder = Path(f"./attribution_maps/{attr_map_type}") / f"label_{beat}_beat/"
             for label in ["abnormal", "normal"]:
                 Path(folder / label).mkdir(parents=True, exist_ok=True)
@@ -269,18 +268,16 @@ if __name__ == "__main__":
     # MODELS_PATH = Path(f"./models/")
     MODELS_PATH = Path(f"../models/")  # fire-ai path
 
-    TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/figures_final/test')
+    # TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/figures_final/test')
 
     BATCH_SIZE = 16
 
     if save == "y":
         create_maps_folders()
-    for attr_map_type in [
-        "gb_grad_cam_map"
-    ]:  # ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
+    for attr_map_type in ["grad_cam_map", "gb_grad_cam_map"]:
         print(f"\nMAP:{attr_map_type}")
 
-        for HEARTBEAT in ["initial", "final", "mid"]:
+        for HEARTBEAT in ["initial", "final"]:
             print(f"\nBEAT: {HEARTBEAT}\n")
             TEST_DATA_PATH = Path(f"../data/figures_{HEARTBEAT}/test")  # fire-ai path
             # roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
