@@ -6,7 +6,8 @@ from torchray.attribution.common import Probe, get_module
 import cv2
 import matplotlib.pyplot as plt
 from torchvision import transforms
-
+import cmapy
+from explainability_metrics import imshow
 
 def deprocess(image):
     transform = transforms.Compose(
@@ -40,11 +41,14 @@ def prepare_saliency(sal_map, index):
 
 
 def saving_saliency_map(sal, index, x, input_filename, main_folder, label, pred_res):
+    sal = np.uint8((255 * sal) / np.max(sal))
     plt.figure()
-    plt.imshow(sal, cmap=plt.cm.hot, alpha=0.7)
-    plt.imshow(deprocess(x[index].cpu()), alpha=0.4)
+    plt.imshow(sal, cmap=plt.cm.hot, alpha=0.9)
+    # plt.colorbar(orientation="horizontal")
+    plt.imshow(deprocess(x[index].cpu()), alpha=0.6)
     plt.axis("off")
     # print(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
+    # plt.show()
     plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
     plt.close()
 
@@ -85,9 +89,11 @@ def saving_grad_cam_map(sal, index, x, input_filename, main_folder, label, pred_
     plt.figure()
     img = np.array(deprocess(x[index].cpu().detach()))
     # sal = np.uint8(255 * sal)
-    plt.imshow(sal, alpha=0.7)
-    plt.imshow(img, alpha=0.8)
+    plt.imshow(sal, alpha=0.9, cmap=plt.cm.hot)
+    # plt.colorbar(orientation="horizontal")
+    plt.imshow(img, alpha=0.6)
     plt.axis("off")
+    # plt.show()
     plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
     plt.close()
 
@@ -141,12 +147,23 @@ def deprocess_image_gb(img):
     """ see https://github.com/jacobgil/keras-grad-cam/blob/master/grad-cam.py#L65 """
     img = img - np.mean(img)
     img = img / (np.std(img) + 1e-5)
+    # img = img * 0.1
+    # img = img + 0.5
+    # print(np.max(img), np.min(img))
+    # imshow(img)
+    img = np.clip(img, 0, 1)
+    img = np.uint8(img * 255 / np.max(img))
+    return np.abs(img)
+
+def default_deprocess_image_gb(img):
+    """ see https://github.com/jacobgil/keras-grad-cam/blob/master/grad-cam.py#L65 """
+    img = img - np.mean(img)
+    img = img / (np.std(img) + 1e-5)
     img = img * 0.1
     img = img + 0.5
     img = np.clip(img, 0, 1)
     img = np.uint8(img * 255)
     return np.abs(img - int(0.5 * 255))
-
 
 def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, labels):
     # print(batch_grad_cam.device, x.device, labels.device)
@@ -162,8 +179,19 @@ def preparing_gb_grad_cam(batch_grad_cam, index, guided_backprop_model, x, label
     return cv2.cvtColor(final_map, cv2.COLOR_RGB2GRAY)
 
 
-def saving_gb_grad_cam(gb_grad_map, input_filename, main_folder, label, pred_res):
+def saving_gb_grad_cam(gb_grad_map, input_filename, main_folder, label, pred_res, x, index):
+    plt.figure()
+    img = np.array(deprocess(x[index].cpu().detach()))
+    plt.imshow(gb_grad_map, alpha=0.9, cmap=plt.cm.hot)
+    plt.colorbar(orientation="horizontal")
+    plt.imshow(img, alpha=0.6)
+    plt.axis("off")
+    plt.show()
+    # plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
+    plt.close()
 
-    cv2.imwrite(
-        str(main_folder / f"{label}/{input_filename}_{pred_res}.png"), gb_grad_map
-    )
+    # gb_grad_map = cv2.applyColorMap(gb_grad_map, cmapy.cmap('hot'))
+    # cv2.imwrite(
+    #     str(main_folder / f"{label}/{input_filename}_{pred_res}.png"), gb_grad_map
+    # )
+    # imshow(gb_grad_map)
