@@ -126,7 +126,7 @@ def save_maps(map, index, x, input_filename, save, label, pred_res, map_type):
     elif map_type == "grad_cam_map":
         saving_grad_cam_map(map, index, x, input_filename, save, label, pred_res)
     elif map_type == "gb_grad_cam_map":
-        saving_gb_grad_cam(map, input_filename, save, label, pred_res)
+        saving_gb_grad_cam(map, input_filename, save, label, pred_res, x, index)
 
 
 """
@@ -188,19 +188,19 @@ def compute_metrics(model, data, batch_size, rois_dict, map_type, save):
                 labels_list.append(label)
                 pred_verification.append(pred_res)
 
-                if save:
-                    if not flag and index == random.randint(0, 15):
-                        flag = True
-                        save_maps(
-                            map_prepared,
-                            index,
-                            inputs,
-                            input_filename,
-                            save,
-                            label,
-                            pred_res,
-                            map_type,
-                        )
+                #if save:
+                #    if not flag and index == random.randint(0, 15):
+                #        flag = True
+                save_maps(
+                    map_prepared,
+                    index,
+                    inputs,
+                    input_filename,
+                    save,
+                    label,
+                    pred_res,
+                    map_type,
+                )
 
     return metric_values, pred_verification, labels_list
 
