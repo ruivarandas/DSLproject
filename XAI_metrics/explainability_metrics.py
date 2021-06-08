@@ -274,7 +274,7 @@ if __name__ == "__main__":
 
     if save == "y":
         create_maps_folders()
-    for attr_map_type in ["grad_cam_map", "gb_grad_cam_map"]:
+    for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
         print(f"\nMAP:{attr_map_type}")
 
         for HEARTBEAT in ["initial", "final"]:
