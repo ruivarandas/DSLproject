@@ -6,6 +6,7 @@ from torchray.attribution.common import Probe, get_module
 import cv2
 import matplotlib.pyplot as plt
 from torchvision import transforms
+import cmapy
 from explainability_metrics import imshow
 
 def deprocess(image):
@@ -182,11 +183,10 @@ def saving_gb_grad_cam(gb_grad_map, input_filename, main_folder, label, pred_res
     plt.figure()
     img = np.array(deprocess(x[index].cpu().detach()))
     plt.imshow(gb_grad_map, alpha=0.9, cmap=plt.cm.hot)
-    #plt.colorbar(orientation="horizontal")
+    # plt.colorbar(orientation="horizontal")
     plt.imshow(img, alpha=0.6)
     plt.axis("off")
-    plt.show()
-    # plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
+    plt.savefig(str(main_folder / f"{label}/{input_filename}_{pred_res}.png"))
     plt.close()
 
     # gb_grad_map = cv2.applyColorMap(gb_grad_map, cmapy.cmap('hot'))
