@@ -140,3 +140,7 @@ Figures
 /.idea
 /data/labels/
 /models/
+*.png
+*.jpeg
+*.jpg
+*tar.gz
