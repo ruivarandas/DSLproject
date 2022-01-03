@@ -127,6 +127,7 @@ def save_maps(map, index, x, input_filename, save, label, pred_res, map_type):
         saving_grad_cam_map(map, index, x, input_filename, save, label, pred_res)
     elif map_type == "gb_grad_cam_map":
         saving_gb_grad_cam(map, input_filename, save, label, pred_res, x, index)
+        # saving_gb_grad_cam(map, input_filename, save, label, pred_res)
 
 
 """
@@ -253,7 +254,7 @@ def labels():
 def create_maps_folders():
     for attr_map_type in ["saliency_map", "grad_cam_map", "gb_grad_cam_map"]:
         for beat in ["initial", "final"]:
-            folder = Path(f"./attribution_maps/{attr_map_type}") / f"label_{beat}_beat/"
+            folder = Path(f"../attribution_maps/{attr_map_type}") / f"label_{beat}_beat/"
             for label in ["abnormal", "normal"]:
                 Path(folder / label).mkdir(parents=True, exist_ok=True)
     return folder
@@ -265,8 +266,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     save = str(args.save)
 
-    # MODELS_PATH = Path(f"./models/")
-    MODELS_PATH = Path(f"../models/")  # fire-ai path
+    MODELS_PATH = Path(f"./models/")
+    # MODELS_PATH = Path(f"../models/")  # fire-ai path
 
     # TEST_DATA_PATH = Path(f'/mnt/Media/bernardo/figures_final/test')
 
@@ -279,11 +280,11 @@ if __name__ == "__main__":
 
         for HEARTBEAT in ["initial", "final"]:
             print(f"\nBEAT: {HEARTBEAT}\n")
-            TEST_DATA_PATH = Path(f"../data/figures_{HEARTBEAT}/test")  # fire-ai path
-            # roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
-            roi_file_path = list(Path("../ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[
-                0
-            ]  # fire-ai path
+            TEST_DATA_PATH = Path(f"/mnt/Media/bernardo/DSL_data/data/figures_{HEARTBEAT}/test")
+            roi_file_path = list((Path.cwd() / "ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[0]
+            # roi_file_path = list(Path("../ROI").glob(f"{beat_int(HEARTBEAT)}_ROI.txt"))[
+            #     0
+            # ]  # fire-ai path
 
             MODEL_NAME = get_model_name(HEARTBEAT)
 
@@ -292,6 +293,7 @@ if __name__ == "__main__":
                     Path(f"./attribution_maps/{attr_map_type}")
                     / f"label_{HEARTBEAT}_beat/"
                 )
+                print(folder)
             else:
                 folder = None
 
@@ -306,4 +308,4 @@ if __name__ == "__main__":
                 attr_map_type,
                 folder,
             )
-            save_results(values, prediction_results, labels, HEARTBEAT, attr_map_type)
+            # save_results(values, prediction_results, labels, HEARTBEAT, attr_map_type)

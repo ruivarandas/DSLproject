@@ -15,6 +15,8 @@ def convert_to_float(data):
 def present_values(folder, map_type, params=None, return_plot=False, return_data=False):
     fig, ax = plt.subplots(ncols=len(BEATS), figsize=(10, 5))
     data =[]
+    plt.xlabel('Value')
+    plt.ylabel('Frequency')
     for i, beat in enumerate(BEATS):
         path_to_results = join(folder, f"{beat}_{map_type}_map_metrics.json")
         with open(path_to_results, 'r') as file:
@@ -23,9 +25,8 @@ def present_values(folder, map_type, params=None, return_plot=False, return_data
         if params is not None:
             values = values[np.where(values != params)[0]]
         print(f"Mean value of {beat} beat: {np.nanmean(values)*100:.2f} +- {np.nanstd(values)*100:.2f}%")
-
-        ax[i].hist(values[np.logical_not(np.isnan(values))], bins=100)
-        data.append(values[np.logical_not(np.isnan(values))])
+        ax[i].hist(values[np.logical_not(np.isnan(values))]*100, bins=100)
+        data.append(values[np.logical_not(np.isnan(values))]*100)
         ax[i].title.set_text(beat)
         ax[i].grid()
         # make_histogram(values[np.logical_not(np.isnan(values))])
@@ -44,6 +45,8 @@ def present_values(folder, map_type, params=None, return_plot=False, return_data
 def present(folder, map_type, params=None, but_zeros=False, return_plot=False, return_data=False):
     fig, ax = plt.subplots(ncols=len(BEATS), figsize=(10, 5))
     data = []
+    plt.xlabel('Value')
+    plt.ylabel('Frequency')
     for i, beat in enumerate(BEATS):
         path_to_results = join(folder, f"{beat}_{map_type}_map_metrics.json")
         with open(path_to_results, 'r') as file:
@@ -54,9 +57,8 @@ def present(folder, map_type, params=None, but_zeros=False, return_plot=False, r
         if but_zeros:
             values = values[np.where(values != 0)[0]]
         print(f"Mean value of {beat} beat: {np.nanmean(values)*100:.2f} +- {np.nanstd(values)*100:.2f}%")
-
-        ax[i].hist(values[np.logical_not(np.isnan(values))], bins=100)
-        data.append(values[np.logical_not(np.isnan(values))])
+        ax[i].hist(values[np.logical_not(np.isnan(values))]*100, bins=100)
+        data.append(values[np.logical_not(np.isnan(values))]*100)
         ax[i].title.set_text(beat)
         ax[i].grid()
         # make_histogram(values[np.logical_not(np.isnan(values))])
